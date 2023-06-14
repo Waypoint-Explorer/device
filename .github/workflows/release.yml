@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  call-build:
+    name: Call Build
+    uses: ./.github/workflows/build.yml
+    
+  bump-tag:
+    name: Bump Tag
+    needs: call-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Github tag bump
+        id: tag_version
+        uses: anothrNick/github-tag-action@1.67.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: false
+          DEFAULT_BUMP: patch
+          MAJOR_STRING_TOKEN: "major"
+          MINOR_STRING_TOKEN: "feat"
+          PATCH_STRING_TOKEN: "fix"
+          BRANCH_HISTORY: last
+    outputs:
+      new_tag: ${{ steps.tag_version.outputs.new_tag }}
+          
+  release:
+    name: Release
+    needs: [call-build, bump-tag]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download firmware
+        uses: actions/download-artifact@v3
+        with:
+          name: firmware
+      - name: Add version to firmware file name
+        run: mv firmware.bin firmware-${{ needs.bump-tag.outputs.new_tag }}.bin
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.bump-tag.outputs.new_tag }}
+          files: firmware-${{ needs.bump-tag.outputs.new_tag }}.bin

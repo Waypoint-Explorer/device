@@ -1,10 +1,17 @@
-#include <Arduino.h>
+#include "config.h"
+#include "devices/EnvSensor.h"
+#include "model/EnvData.h"
+#include "utility/Logger.h"
+
+EnvSensor envSensor;
+LoggerService Logger;
 
 void setup() {
-  // put your setup code here, to run once:
+    Logger.init();
+    Logger.log(".:: Init Device ::.");
+    envSensor.init();
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
+void loop() { 
+    
 }
-

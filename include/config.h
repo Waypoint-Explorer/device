@@ -4,6 +4,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+// File name
+#define FILENAME "/env_data.json"
 
 
 // Errors

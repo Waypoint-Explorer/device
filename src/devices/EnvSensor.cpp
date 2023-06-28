@@ -14,7 +14,7 @@ bsec_virtual_sensor_t sensor_list[] = {
 
 bool EnvSensor::init() {
     // Sensor begin and check error
-    sensor.begin(0x77, Wire);
+    sensor.begin(BME68X_I2C_ADDR_HIGH, Wire);
     if (!checkSensor()) {
         Logger.log("Failed to init BME680, check wiring!");
         return false;
@@ -42,6 +42,12 @@ bool EnvSensor::init() {
         return false;
     }
 
+    sensor.setState(bsecState);
+      if (!checkSensor()) {
+        Logger.log("Failed to set state!");
+        return false;
+    }
+
     return true;
 }
 
@@ -53,7 +59,8 @@ EnvData EnvSensor::getEnvData() {
         envData.pressure = sensor.pressure;
         envData.airQuality = sensor.iaq;
 
-        Logger.log(envData.toString());
+        Logger.log(envData.toString() +
+                   " | iaqAccuracy: " + String(sensor.iaqAccuracy));
     }
     return envData;
 }

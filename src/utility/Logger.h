@@ -7,11 +7,12 @@
 class LoggerService {
    public:
     /// @brief Init logger
-    void init();
+    void init(bool enable);
 
     /// @brief Print log message
     /// @param msg log message
     void log(const String& msg);
+
 };
 
 extern LoggerService Logger;

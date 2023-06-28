@@ -14,6 +14,7 @@
 class DeviceDataHandler {
    public:
     static void init();
+    static void reset();
     static void initData(Device* device); 
     static void updateEnvData(EnvData envData, Device* device);
 };

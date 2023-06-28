@@ -1,10 +1,13 @@
 #include "DeviceDataHandler.h"
 
 void DeviceDataHandler::init() { SPIFFS.begin(true); }
+void DeviceDataHandler::reset() { SPIFFS.remove(FILENAME); }
 
 void DeviceDataHandler::initData(Device* device) {
     File file = SPIFFS.open(FILENAME, FILE_WRITE);
     DynamicJsonDocument doc(10000);
+
+    device->setup();
 
     doc["id"] = device->getId();
 

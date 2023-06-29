@@ -1,16 +1,13 @@
 #include "EnvSensor.h"
 
-const uint8_t bsec_config_iaq[] = {
+const uint8_t bsecConfigIaq[] = {
 #include "config/generic_33v_3s_4d/bsec_iaq.txt"
 };
 
 // List of sensor needed
-bsec_virtual_sensor_t sensor_list[] = {
-    BSEC_OUTPUT_RAW_TEMPERATURE,
-    BSEC_OUTPUT_RAW_PRESSURE,
-    BSEC_OUTPUT_RAW_HUMIDITY,
-    BSEC_OUTPUT_IAQ,
-};
+bsec_virtual_sensor_t sensorList[] = {
+    BSEC_OUTPUT_RAW_TEMPERATURE, BSEC_OUTPUT_RAW_PRESSURE,
+    BSEC_OUTPUT_RAW_HUMIDITY, BSEC_OUTPUT_IAQ, BSEC_OUTPUT_RAW_GAS};
 
 bool EnvSensor::init() {
     // Sensor begin and check error
@@ -27,23 +24,24 @@ bool EnvSensor::init() {
                String(sensor.version.minor_bugfix));
 
     // Set sensor config and check errors
-    sensor.setConfig(bsec_config_iaq);
+    sensor.setConfig(bsecConfigIaq);
     if (!checkSensor()) {
         Logger.log("Failed to set config!");
         return false;
     }
 
     // Update sensor subscription and check errors
-    sensor.updateSubscription(sensor_list,
-                              sizeof(sensor_list) / sizeof(sensor_list[0]),
+    sensor.updateSubscription(sensorList,
+                              sizeof(sensorList) / sizeof(sensorList[0]),
                               BSEC_SAMPLE_RATE_LP);
     if (!checkSensor()) {
         Logger.log("Failed to update subscription!");
         return false;
     }
 
+    // Set sensor state
     sensor.setState(bsecState);
-      if (!checkSensor()) {
+    if (!checkSensor()) {
         Logger.log("Failed to set state!");
         return false;
     }
@@ -55,12 +53,13 @@ EnvData EnvSensor::getEnvData() {
     EnvData envData = EnvData();
     if (sensor.run()) {
         envData.temperature = sensor.rawTemperature;
-        envData.humidity = sensor.rawHumidity;
-        envData.pressure = sensor.pressure;
-        envData.airQuality = sensor.iaq;
+        envData.humidity = sensor.rawHumidity - HUMIDITY_CORRECTION;
+        envData.pressure = formatPressure(sensor.pressure);
+        envData.airQuality =
+            getAirQulity(sensor.rawHumidity - HUMIDITY_CORRECTION, sensor.gasResistance);
+        envData.gasResistance = sensor.gasResistance;
 
-        Logger.log(envData.toString() +
-                   " | iaqAccuracy: " + String(sensor.iaqAccuracy));
+        Logger.log(envData.toString());
     }
     return envData;
 }
@@ -83,4 +82,52 @@ bool EnvSensor::checkSensor() {
     }
 
     return true;
+}
+
+// Calculate humidity score
+float EnvSensor::getHumidityScore(float humidity) {
+    float humidityScore;
+    float currentHumidity = humidity;
+    if (currentHumidity >= 38 && currentHumidity <= 42)
+        humidityScore = HUMIDITY_WEIGHT;  // Humidity +/-5% around optimum
+    else {                                // sub-optimal
+        if (currentHumidity < 38)
+            humidityScore =
+                HUMIDITY_WEIGHT / HUMIDITY_REFERENCE * currentHumidity;
+        else {
+            humidityScore = ((-HUMIDITY_WEIGHT / (100 - HUMIDITY_REFERENCE) *
+                              currentHumidity) +
+                             0.416666);
+        }
+    }
+
+    // Logger.log(String(humidityScore));
+    return humidityScore;
+}
+
+// Calculate gas score
+float EnvSensor::getGasScore(float gasResistance) {
+    float gasScore;
+    float gasReference = gasResistance;
+    if (gasReference > GAS_UPPER_LIMIT) gasReference = GAS_UPPER_LIMIT;
+    if (gasReference < GAS_LOWER_LIMIT) gasReference = GAS_LOWER_LIMIT;
+    gasScore =
+        (GAS_WEIGHT / (GAS_UPPER_LIMIT - GAS_LOWER_LIMIT) * gasReference -
+         (GAS_LOWER_LIMIT *
+          (GAS_WEIGHT / (GAS_UPPER_LIMIT - GAS_LOWER_LIMIT))));
+
+    // Logger.log(String(gasScore));
+
+    return gasScore;
+}
+
+// Air quality percentage
+int EnvSensor::getAirQulity(float humidity, float gasResistance) {
+    float airQualityScore =
+        getHumidityScore(humidity) + getGasScore(gasResistance);
+    return airQualityScore * 100;
+}
+
+int EnvSensor::formatPressure(float pressure){
+    return (int) pressure/10;
 }

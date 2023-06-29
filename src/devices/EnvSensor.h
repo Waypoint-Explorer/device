@@ -6,11 +6,21 @@
 #include "model/EnvData.h"
 #include "utility/Logger.h"
 
+#define HUMIDITY_WEIGHT 0.25
+#define HUMIDITY_REFERENCE 40
+#define HUMIDITY_CORRECTION 5 // Correction value
+
+#define GAS_WEIGHT 0.75
+#define GAS_LOWER_LIMIT 5000
+#define GAS_UPPER_LIMIT 60000
+
 class EnvSensor {
    public:
     Bsec sensor;
 
-    /// @brief Init sensor
+    /**
+     *  @brief Init sensor
+     */
     bool init();
 
     /// @brief Ger environmental data from sensor
@@ -19,6 +29,15 @@ class EnvSensor {
 
    private:
     bool checkSensor();
+
+    float getHumidityScore(float humidity);
+
+    float getGasScore(float gasResistance);
+
+    int getAirQulity(float humidity, float gasResistance);
+
+    int formatPressure(float pressure);
+
     uint8_t bsecState[BSEC_MAX_STATE_BLOB_SIZE] = {
         2,   9,   4,   1,   61,  0,   0,   0,   0,   0,   0,  0,   131,
         0,   0,   0,   56,  0,   1,   0,   61,  47,  209, 64, 166, 49,

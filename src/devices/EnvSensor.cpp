@@ -1,5 +1,6 @@
 #include "EnvSensor.h"
 
+// Sensor configuration
 const uint8_t bsecConfigIaq[] = {
 #include "config/generic_33v_3s_4d/bsec_iaq.txt"
 };
@@ -58,13 +59,13 @@ EnvData EnvSensor::getEnvData() {
         envData.airQuality = getAirQulity(
             sensor.rawHumidity - HUMIDITY_CORRECTION, sensor.gasResistance);
         envData.gasResistance = sensor.gasResistance;
-
-        Logger.log(envData.toString());
+        
+        // Debug
+        envData.log();
     }
     return envData;
 }
 
-// Check sensor for errors
 bool EnvSensor::checkSensor() {
     if (sensor.bsecStatus < BSEC_OK) {
         Logger.log("BSEC error, status: " + sensor.bsecStatus);
@@ -84,13 +85,12 @@ bool EnvSensor::checkSensor() {
     return true;
 }
 
-// Calculate humidity score
 float EnvSensor::getHumidityScore(float humidity) {
     float humidityScore;
     float currentHumidity = humidity;
     if (currentHumidity >= 38 && currentHumidity <= 42)
-        humidityScore = HUMIDITY_WEIGHT;  // Humidity +/-5% around optimum
-    else {                                // sub-optimal
+        humidityScore = HUMIDITY_WEIGHT;
+    else {
         if (currentHumidity < 38)
             humidityScore =
                 HUMIDITY_WEIGHT / HUMIDITY_REFERENCE * currentHumidity;
@@ -105,7 +105,6 @@ float EnvSensor::getHumidityScore(float humidity) {
     return humidityScore;
 }
 
-// Calculate gas score
 float EnvSensor::getGasScore(float gasResistance) {
     float gasScore;
     float gasReference = gasResistance;
@@ -117,11 +116,9 @@ float EnvSensor::getGasScore(float gasResistance) {
           (GAS_WEIGHT / (GAS_UPPER_LIMIT - GAS_LOWER_LIMIT))));
 
     // Logger.log(String(gasScore));
-
     return gasScore;
 }
 
-// Air quality percentage
 int EnvSensor::getAirQulity(float humidity, float gasResistance) {
     float airQualityScore =
         getHumidityScore(humidity) + getGasScore(gasResistance);

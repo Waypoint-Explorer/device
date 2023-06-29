@@ -9,8 +9,8 @@ ErrorsHandler::ErrorsHandler() {
     sensor = SENSOR_OK;
 }
 
-ErrorsHandler::ErrorsHandler(byte battery, byte init, byte file, byte gps, byte qrCode,
-               byte sensor) {
+ErrorsHandler::ErrorsHandler(byte battery, byte init, byte file, byte gps,
+                             byte qrCode, byte sensor) {
     this->battery = battery;
     this->init = init;
     this->file = file;
@@ -25,6 +25,7 @@ String ErrorsHandler::getString() {
 }
 
 void ErrorsHandler::log() {
-    Logger.log("B" + String(battery) + "|I" +  String(init) + "|F" + String(file) + "|G" + String(gps) + "|Q" +
-               String(qrCode) + "|S" + String(sensor));
+    Logger.log("Errors: B" + String(battery) + "|I" + String(init) + "|F" +
+               String(file) + "|G" + String(gps) + "|Q" + String(qrCode) +
+               "|S" + String(sensor));
 }

@@ -2,22 +2,32 @@
 #define __ENV_DATA__
 
 #include "Arduino.h"
+#include "utility/Logger.h"
 
-/// @brief Containing environmental data
+/* Environmental Data class definition */
 class EnvData {
    public:
-    /// @brief Init environmental data
+    /**
+     * @brief Contstructor to initialize enviromental data
+     */
     EnvData();
-    
+
     int8_t temperature;
     uint8_t humidity;
     uint32_t pressure;
     uint8_t airQuality;
     uint32_t gasResistance;
 
-    /// @brief Data to string
-    /// @return string containing environmental data
+    /**
+     * @brief Function to get data as string
+     * @return String of environmental data
+     */
     String toString();
+
+    /**
+     * @brief Function for debug data
+     */
+    void log();
 };
 
 #endif

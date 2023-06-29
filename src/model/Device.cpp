@@ -5,9 +5,6 @@ Device::Device() {
     errorsHandler = new ErrorsHandler();
 }
 
-void Device::setup() {
-    id = IdentifierGenerator::generateUniqueNumberId(16);
-    
-}
+void Device::setup() { id = IdentifierGenerator::generateUniqueNumberId(16); }
 
 String Device::getId() { return id; }

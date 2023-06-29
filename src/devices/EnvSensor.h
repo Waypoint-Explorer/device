@@ -15,6 +15,7 @@
 #define GAS_LOWER_LIMIT 5000
 #define GAS_UPPER_LIMIT 65000
 
+/* Environmental Sensor class definition */
 class EnvSensor {
    public:
     Bsec sensor;
@@ -26,21 +27,47 @@ class EnvSensor {
 
     /**
      * @brief Get environmental data from sensor
-     * @return environmental data
+     * @return environmental data object
      */
     EnvData getEnvData();
 
    private:
+    /**
+     * @brief Function to check sensor errors
+     * @return true if no errors, false otherwise
+     */
     bool checkSensor();
 
+    /**
+     * @brief Function to get humidity score
+     * @param humidity : Humidity as float
+     * @return humidity score value as float
+     */
     float getHumidityScore(float humidity);
 
+    /**
+     * @brief Function to get gas resistance score
+     * @param gasResistance : Gas resistance as float
+     * @return gas score value as float
+     */
     float getGasScore(float gasResistance);
 
+    /**
+     * @brief Function to get air quality
+     * @param humidity : Humidity as float
+     * @param gasResistance : Gas resistance as float
+     * @return air quality value as integer
+     */
     int getAirQulity(float humidity, float gasResistance);
 
+    /**
+     * @brief Function to format pressure to 5 digits
+     * @param pressure : pressure as float
+     * @return pressure formatted as integer
+     */
     int formatPressure(float pressure);
 
+    // State of BSEC sensor
     uint8_t bsecState[BSEC_MAX_STATE_BLOB_SIZE] = {
         2,   9,   4,   1,   61,  0,   0,   0,   0,   0,   0,  0,   131,
         0,   0,   0,   56,  0,   1,   0,   61,  47,  209, 64, 166, 49,

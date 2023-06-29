@@ -1,7 +1,9 @@
-#ifndef __CONFIG__
-#define __CONFIG__
+#ifndef __PINS__
+#define __PINS__
 
+/* Pins of devices */
 
-// Pins file
+#define LED_BUILTIN 12
+#define RESET_BUTTON GPIO_NUM_27
 
 #endif

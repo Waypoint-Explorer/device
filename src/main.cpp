@@ -4,6 +4,7 @@
 #include "devices/EnvSensor.h"
 #include "model/Device.h"
 #include "model/EnvData.h"
+#include "pins.h"
 #include "utility/DeviceDataHandler.h"
 #include "utility/Logger.h"
 
@@ -12,12 +13,13 @@ LoggerService Logger;
 Preferences preferences;
 
 TaskHandle_t UpdateDataTask;
+static volatile uint8_t dataTaskStatus = STATUS_DEAD;
+
 Device* device;
 
 Button btnReset(RESET_BUTTON, TIME_LONGPRESS_RESET);
 
-static volatile uint8_t dataTaskStatus = STATUS_DEAD;
-
+// Function called by UpdateDataTask to update environmental data
 void updateData(void* parameter) {
     Logger.log("- BORN ENV DATA");
     dataTaskStatus = STATUS_ALIVE;
@@ -30,6 +32,7 @@ void updateData(void* parameter) {
     vTaskDelete(UpdateDataTask);
 }
 
+// Setup function
 void setup() {
     Logger.init(true);
     Logger.log(".:: SETUP Device ::.");
@@ -38,13 +41,15 @@ void setup() {
     esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP);
 
     preferences.begin("device");
+
     device = new Device();
     device->errorsHandler->sensor = envSensor.init();
 
     DeviceDataHandler::init();
 
+    // Check wakeup type
     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED) {
-        // First seconds check for reset
+        // First seconds wait and check for reset button pressed
         while (esp_timer_get_time() <= TIME_RESET) {
             if (btnReset.checkPress() == LONG_PRESS) {
                 Logger.log("! DEVICE RESET");
@@ -54,10 +59,12 @@ void setup() {
             }
         }
 
-        // Init data
+        // Check if already initialized
         if (preferences.getBool("init") == false) {
             Logger.log("@ INIT DATA");
             preferences.putBool("init", true);
+            // Setup device data
+            device->setup();
             device->errorsHandler->file = DeviceDataHandler::initData(device);
         }
 
@@ -68,17 +75,20 @@ void setup() {
     preferences.end();
 
     // Create update data task
-    xTaskCreatePinnedToCore(updateData, "updateDataTask", 10000, NULL, 10,
-                            &UpdateDataTask, 0);
+    xTaskCreatePinnedToCore(updateData, "updateDataTask",
+                            UPDATE_DATA_TASK_WORDS, NULL,
+                            UPDATE_DATA_TASK_PRIORITY, &UpdateDataTask, CORE_0);
 
     // Wait task to finish
     delay(100);
     while (dataTaskStatus == STATUS_ALIVE) {
     }
 
+    device->errorsHandler->log();
+
     Logger.log(".:: SLEEP Device ::.");
     esp_deep_sleep_start();
 }
 
-// Never used
+// Loop functionn never used
 void loop() {}

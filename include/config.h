@@ -4,13 +4,12 @@
 #include "Arduino.h"
 #include "Wire.h"
 
-// File name
-#define FILENAME "/env_data.json"
+/* Configuration main */
 
 // Task timer
 #define mS_TO_S_FACTOR 1000
 #define uS_TO_S_FACTOR 1000000
-#define TIME_TO_SLEEP UINT32_C(60 * 60 * uS_TO_S_FACTOR) // 60 min   // Test 3 * uS_TO_S_FACTOR
+#define TIME_TO_SLEEP UINT32_C(60 * 60 * uS_TO_S_FACTOR)  // 60 min   // Test 3 * uS_TO_S_FACTOR
 
 // Admin reset
 #define TIME_RESET 5 * uS_TO_S_FACTOR
@@ -25,8 +24,13 @@
 #define STATUS_DEAD 0
 #define STATUS_ALIVE 1
 
-// Pins
-#define LED_BUILTIN 12
-#define RESET_BUTTON GPIO_NUM_27
+// Task settings
+#define CORE_0 0
+#define CORE_1 1
+#define UPDATE_DATA_TASK_PRIORITY 10
+#define UPDATE_DATA_TASK_WORDS 10000
+
+
+
 
 #endif

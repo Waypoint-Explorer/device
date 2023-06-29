@@ -9,7 +9,13 @@ EnvData::EnvData() {
 }
 
 String EnvData::toString() {
-    return "Enviromental Data: T " + String(temperature) + " C° | P " +
-           String(pressure) + " hPA | H " + String(humidity) + " % | AQ " +
-           String(airQuality) + " % | GR " + String(gasResistance) + " Ohm";
+    return String(temperature) + String(pressure) + String(humidity) +
+           String(airQuality) + String(gasResistance);
+}
+
+void EnvData::log() {
+    Logger.log("Enviromental Data: T " + String(temperature) + " C° | P " +
+               String(pressure) + " hPA | H " + String(humidity) + " % | AQ " +
+               String(airQuality) + " % | GR " + String(gasResistance) +
+               " Ohm");
 }

@@ -3,16 +3,20 @@
 
 #include "Arduino.h"
 
-/// @brief Print logging data for debug
+/* Logger Service class definition*/
 class LoggerService {
    public:
-    /// @brief Init logger
+    /**
+     * @brief Function to initialize logger
+     * @param enable : Enable or disable logger
+     */
     void init(bool enable);
 
-    /// @brief Print log message
-    /// @param msg log message
+    /**
+     * @brief Function to print log message
+     * @param msg : Log message
+     */
     void log(const String& msg);
-
 };
 
 extern LoggerService Logger;

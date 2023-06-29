@@ -1,6 +1,6 @@
-#include "Errors.h"
+#include "ErrorsHandler.h"
 
-Errors::Errors() {
+ErrorsHandler::ErrorsHandler() {
     battery = BATTERY_OK;
     init = INIT_OK;
     file = FILE_OK;
@@ -9,7 +9,7 @@ Errors::Errors() {
     sensor = SENSOR_OK;
 }
 
-Errors::Errors(byte battery, byte init, byte file, byte gps, byte qrCode,
+ErrorsHandler::ErrorsHandler(byte battery, byte init, byte file, byte gps, byte qrCode,
                byte sensor) {
     this->battery = battery;
     this->init = init;
@@ -19,12 +19,12 @@ Errors::Errors(byte battery, byte init, byte file, byte gps, byte qrCode,
     this->sensor = sensor;
 }
 
-String Errors::getString() {
+String ErrorsHandler::getString() {
     return String(battery) + String(init) + String(file) + String(gps) +
            String(qrCode) + String(sensor);
 }
 
-void Errors::log() {
+void ErrorsHandler::log() {
     Logger.log("B" + String(battery) + "|I" +  String(init) + "|F" + String(file) + "|G" + String(gps) + "|Q" +
                String(qrCode) + "|S" + String(sensor));
 }

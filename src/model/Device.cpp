@@ -2,7 +2,7 @@
 
 Device::Device() {
     envDataList = new LinkedList<EnvData>();
-    errors = new Errors();
+    errorsHandler = new ErrorsHandler();
 }
 
 void Device::setup() {

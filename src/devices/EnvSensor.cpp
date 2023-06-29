@@ -9,12 +9,12 @@ bsec_virtual_sensor_t sensorList[] = {
     BSEC_OUTPUT_RAW_TEMPERATURE, BSEC_OUTPUT_RAW_PRESSURE,
     BSEC_OUTPUT_RAW_HUMIDITY, BSEC_OUTPUT_IAQ, BSEC_OUTPUT_RAW_GAS};
 
-bool EnvSensor::init() {
+SensorError EnvSensor::init() {
     // Sensor begin and check error
     sensor.begin(BME68X_I2C_ADDR_HIGH, Wire);
     if (!checkSensor()) {
         Logger.log("Failed to init BME680, check wiring!");
-        return false;
+        return SENSOR_CANT_INIT;
     }
 
     // Sensor version
@@ -27,7 +27,7 @@ bool EnvSensor::init() {
     sensor.setConfig(bsecConfigIaq);
     if (!checkSensor()) {
         Logger.log("Failed to set config!");
-        return false;
+        return SENSOR_CANT_CONFIG;
     }
 
     // Update sensor subscription and check errors
@@ -36,17 +36,17 @@ bool EnvSensor::init() {
                               BSEC_SAMPLE_RATE_LP);
     if (!checkSensor()) {
         Logger.log("Failed to update subscription!");
-        return false;
+        return SENSOR_CANT_SUBSCRIBE;
     }
 
     // Set sensor state
     sensor.setState(bsecState);
     if (!checkSensor()) {
         Logger.log("Failed to set state!");
-        return false;
+        return SENSOR_CANT_SET_STATE;
     }
 
-    return true;
+    return SENSOR_OK;
 }
 
 EnvData EnvSensor::getEnvData() {
@@ -55,8 +55,8 @@ EnvData EnvSensor::getEnvData() {
         envData.temperature = sensor.rawTemperature;
         envData.humidity = sensor.rawHumidity - HUMIDITY_CORRECTION;
         envData.pressure = formatPressure(sensor.pressure);
-        envData.airQuality =
-            getAirQulity(sensor.rawHumidity - HUMIDITY_CORRECTION, sensor.gasResistance);
+        envData.airQuality = getAirQulity(
+            sensor.rawHumidity - HUMIDITY_CORRECTION, sensor.gasResistance);
         envData.gasResistance = sensor.gasResistance;
 
         Logger.log(envData.toString());
@@ -128,6 +128,4 @@ int EnvSensor::getAirQulity(float humidity, float gasResistance) {
     return airQualityScore * 100;
 }
 
-int EnvSensor::formatPressure(float pressure){
-    return (int) pressure/10;
-}
+int EnvSensor::formatPressure(float pressure) { return (int)pressure / 10; }

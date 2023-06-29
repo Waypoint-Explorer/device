@@ -3,16 +3,17 @@
 
 #include "Arduino.h"
 #include "bsec.h"
+#include "errors.h"
 #include "model/EnvData.h"
 #include "utility/Logger.h"
 
 #define HUMIDITY_WEIGHT 0.25
 #define HUMIDITY_REFERENCE 40
-#define HUMIDITY_CORRECTION 5 // Correction value
+#define HUMIDITY_CORRECTION 5  // Correction value
 
 #define GAS_WEIGHT 0.75
 #define GAS_LOWER_LIMIT 5000
-#define GAS_UPPER_LIMIT 60000
+#define GAS_UPPER_LIMIT 65000
 
 class EnvSensor {
    public:
@@ -21,10 +22,12 @@ class EnvSensor {
     /**
      *  @brief Init sensor
      */
-    bool init();
+    SensorError init();
 
-    /// @brief Ger environmental data from sensor
-    /// @return environmental data
+    /**
+     * @brief Get environmental data from sensor
+     * @return environmental data
+     */
     EnvData getEnvData();
 
    private:

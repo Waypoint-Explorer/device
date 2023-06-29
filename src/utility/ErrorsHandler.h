@@ -1,14 +1,14 @@
-#ifndef __ERRORS__
-#define __ERRORS__
+#ifndef __ERRORS_HANLDER__
+#define __ERRORS_HANDLER__
 
 #include "Arduino.h"
-#include "config.h"
+#include "errors.h"
 #include "utility/Logger.h"
 
-class Errors {
+class ErrorsHandler {
    public:
-    Errors();
-    Errors(byte battery, byte init, byte file, byte gps, byte qrCode,
+    ErrorsHandler();
+    ErrorsHandler(byte battery, byte init, byte file, byte gps, byte qrCode,
            byte sensor);
 
     byte battery;  // battery low

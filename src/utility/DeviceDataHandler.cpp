@@ -1,9 +1,10 @@
 #include "DeviceDataHandler.h"
 
 void DeviceDataHandler::init() { SPIFFS.begin(true); }
+
 void DeviceDataHandler::reset() { SPIFFS.remove(FILENAME); }
 
-void DeviceDataHandler::initData(Device* device) {
+FileError DeviceDataHandler::initData(Device* device) {
     File file = SPIFFS.open(FILENAME, FILE_WRITE);
     DynamicJsonDocument doc(10000);
 
@@ -15,14 +16,15 @@ void DeviceDataHandler::initData(Device* device) {
 
     if (serializeJsonPretty(doc, file) == 0) {
         Logger.log("Failed to write to SPIFFS file");
-        device->errors->file = FILE_CANT_WRITE;
+        return FILE_CANT_WRITE;
     } else {
         Logger.log("File Success!");
     }
     file.close();
+    return FILE_OK;
 }
 
-void DeviceDataHandler::updateEnvData(EnvData envData, Device* device) {
+FileError DeviceDataHandler::updateEnvData(EnvData envData, Device* device) {
     File file = SPIFFS.open(FILENAME, FILE_READ);
     DynamicJsonDocument doc(10000);
 
@@ -48,7 +50,7 @@ void DeviceDataHandler::updateEnvData(EnvData envData, Device* device) {
 
         if (serializeJsonPretty(doc, file) == 0) {
             Logger.log("Failed to write to SPIFFS file");
-            device->errors->file = FILE_CANT_WRITE;
+            return FILE_CANT_WRITE;
         } else {
             Logger.log("Success!");
 
@@ -58,6 +60,7 @@ void DeviceDataHandler::updateEnvData(EnvData envData, Device* device) {
         file.close();
 
     } else {
-        device->errors->file = FILE_CANT_OPEN;
+        return FILE_CANT_OPEN;
     }
+    return FILE_OK;
 }

@@ -39,7 +39,7 @@ void setup() {
 
     preferences.begin("device");
     device = new Device();
-    envSensor.init();
+    device->errorsHandler->sensor = envSensor.init();
 
     DeviceDataHandler::init();
 
@@ -58,7 +58,7 @@ void setup() {
         if (preferences.getBool("init") == false) {
             Logger.log("@ INIT DATA");
             preferences.putBool("init", true);
-            DeviceDataHandler::initData(device);
+            device->errorsHandler->file = DeviceDataHandler::initData(device);
         }
 
         Logger.log(".:: SLEEP Device ::.");

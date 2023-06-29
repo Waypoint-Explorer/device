@@ -13,6 +13,7 @@ class EnvData {
     uint8_t humidity;
     uint32_t pressure;
     uint8_t airQuality;
+    uint32_t gasResistance;
 
     /// @brief Data to string
     /// @return string containing environmental data

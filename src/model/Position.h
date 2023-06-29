@@ -18,8 +18,8 @@ class Position {
     float longitude;
 
     /**
-     * @brief Function to get coordinates as string
-     * @return String of coordinates
+     * @brief Function to get position as string
+     * @return String of position
      */
     String toString();
 

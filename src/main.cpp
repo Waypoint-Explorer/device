@@ -25,7 +25,7 @@ void updateData(void* parameter) {
     dataTaskStatus = STATUS_ALIVE;
     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER) {
         Logger.log("- ENV DATA UPDATE");
-        DeviceDataHandler::updateEnvData(envSensor.getEnvData(), device);
+        DeviceDataHandler::writeLastEnvData(envSensor.getEnvData(), device);
     }
     Logger.log("- DEAD ENV DATA");
     dataTaskStatus = STATUS_DEAD;
@@ -34,18 +34,18 @@ void updateData(void* parameter) {
 
 // Setup function
 void setup() {
-    Logger.init(true);
+    Logger.begin(true);
     Logger.log(".:: SETUP Device ::.");
 
     pinMode(LED_BUILTIN, OUTPUT);
     esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP);
 
     preferences.begin("device");
+    DeviceDataHandler::begin();
 
     device = new Device();
-    device->errorsHandler->sensor = envSensor.init();
 
-    DeviceDataHandler::init();
+    device->errorsHandler->sensor = envSensor.begin();
 
     // Check wakeup type
     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED) {
@@ -62,15 +62,21 @@ void setup() {
         // Check if already initialized
         if (preferences.getBool("init") == false) {
             Logger.log("@ INIT DATA");
-            preferences.putBool("init", true);
             // Setup device data
             device->setup();
-            device->errorsHandler->file = DeviceDataHandler::initData(device);
+            device->errorsHandler->file =
+                DeviceDataHandler::initEnvDataJsonArray();
+
+            preferences.putString("id", device->id);
+            preferences.putBool("init", true);
+            //envSensor.calibrate(20);
         }
 
         Logger.log(".:: SLEEP Device ::.");
         esp_deep_sleep_start();
     }
+
+    device->id = preferences.getString("id");
 
     preferences.end();
 
@@ -84,7 +90,7 @@ void setup() {
     while (dataTaskStatus == STATUS_ALIVE) {
     }
 
-    device->errorsHandler->log();
+    device->log();
 
     Logger.log(".:: SLEEP Device ::.");
     esp_deep_sleep_start();

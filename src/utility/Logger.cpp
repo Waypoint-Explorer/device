@@ -1,6 +1,6 @@
 #include "Logger.h"
 
-void LoggerService::init(bool enable) {
+void LoggerService::begin(bool enable) {
     if (enable) Serial.begin(115200);
 }
 

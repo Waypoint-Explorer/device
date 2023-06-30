@@ -18,7 +18,7 @@ class DeviceDataHandler {
     /**
      * @brief Function to begin SPIFFS
      */
-    static void init();
+    static void begin();
 
     /**
      * @brief Function to remove old data
@@ -27,10 +27,9 @@ class DeviceDataHandler {
 
     /**
      * @brief Function to initialize data of the device and store in file JSON
-     * @param device : Device object
      * @return FileError in case of errors
      */
-    static FileError initData(Device* device);
+    static FileError initEnvDataJsonArray();
 
     /**
      * @brief Function that updates environmental data list with last reading
@@ -38,7 +37,15 @@ class DeviceDataHandler {
      * @param device  : Device object
      * @return FileError in case of errors
      */
-    static FileError updateEnvData(EnvData envData, Device* device);
+    static FileError writeLastEnvData(EnvData envData, Device* device);
+
+    /**
+     * @brief Function that read environmental data list
+     * @param LinkedList<EnvData> : List of environmental data
+     * @return FileError in case of errors
+     */
+     static FileError readEnvDataList(LinkedList<EnvData>* envDataList);
+
 };
 
 #endif

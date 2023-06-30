@@ -10,7 +10,7 @@ bsec_virtual_sensor_t sensorList[] = {
     BSEC_OUTPUT_RAW_TEMPERATURE, BSEC_OUTPUT_RAW_PRESSURE,
     BSEC_OUTPUT_RAW_HUMIDITY, BSEC_OUTPUT_IAQ, BSEC_OUTPUT_RAW_GAS};
 
-SensorError EnvSensor::init() {
+SensorError EnvSensor::begin() {
     // Sensor begin and check error
     sensor.begin(BME68X_I2C_ADDR_HIGH, Wire);
     if (!checkSensor()) {
@@ -59,7 +59,7 @@ EnvData EnvSensor::getEnvData() {
         envData.airQuality = getAirQulity(
             sensor.rawHumidity - HUMIDITY_CORRECTION, sensor.gasResistance);
         envData.gasResistance = sensor.gasResistance;
-        
+
         // Debug
         envData.log();
     }
@@ -126,3 +126,14 @@ int EnvSensor::getAirQulity(float humidity, float gasResistance) {
 }
 
 int EnvSensor::formatPressure(float pressure) { return (int)pressure / 10; }
+
+void EnvSensor::calibrate(int cycles) {
+    Logger.log("START CALIBRATION!");
+    int count = 0;
+    while (count <= cycles) {
+        count++;
+        getEnvData();
+        delay(CALIBRATION_DELAY_MILLIS);
+    }
+    Logger.log("CALIBRATED!");
+}

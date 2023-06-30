@@ -2,6 +2,7 @@
 #include "Preferences.h"
 #include "config.h"
 #include "devices/EnvSensor.h"
+#include "devices/Gps.h"
 #include "model/Device.h"
 #include "model/EnvData.h"
 #include "pins.h"
@@ -9,9 +10,10 @@
 #include "utility/Logger.h"
 
 EnvSensor envSensor;
+Gps gps;
 LoggerService Logger;
 Preferences preferences;
-
+TimeData timeData;
 TaskHandle_t UpdateDataTask;
 static volatile uint8_t dataTaskStatus = STATUS_DEAD;
 
@@ -24,8 +26,12 @@ void updateData(void* parameter) {
     Logger.log("- BORN ENV DATA");
     dataTaskStatus = STATUS_ALIVE;
     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER) {
+        Logger.log("-DATE/TIME UPDATE");
+        device->errorsHandler->gps = gps.getGpsData(timeData);
+
         Logger.log("- ENV DATA UPDATE");
-        DeviceDataHandler::updateEnvData(envSensor.getEnvData(), device);
+        device->errorsHandler->file =
+            DeviceDataHandler::updateEnvData(envSensor.getEnvData(), device);
     }
     Logger.log("- DEAD ENV DATA");
     dataTaskStatus = STATUS_DEAD;
@@ -45,14 +51,18 @@ void setup() {
     device = new Device();
     device->errorsHandler->sensor = envSensor.init();
 
+    gps.init();
+    timeData = TimeData();
+
     DeviceDataHandler::init();
 
-    // Check wakeup type
+    // Check if wake up cause is undefined
     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED) {
         // First seconds wait and check for reset button pressed
         while (esp_timer_get_time() <= TIME_RESET) {
             if (btnReset.checkPress() == LONG_PRESS) {
                 Logger.log("! DEVICE RESET");
+                // Reset device
                 preferences.putBool("init", false);
                 DeviceDataHandler::reset();
                 ESP.restart();
@@ -62,10 +72,12 @@ void setup() {
         // Check if already initialized
         if (preferences.getBool("init") == false) {
             Logger.log("@ INIT DATA");
-            preferences.putBool("init", true);
             // Setup device data
+            preferences.putBool("init", true);
             device->setup();
             device->errorsHandler->file = DeviceDataHandler::initData(device);
+            device->errorsHandler->gps =
+                gps.getGpsData(timeData, device->position);
         }
 
         Logger.log(".:: SLEEP Device ::.");
@@ -85,6 +97,7 @@ void setup() {
     }
 
     device->errorsHandler->log();
+    device->log();
 
     Logger.log(".:: SLEEP Device ::.");
     esp_deep_sleep_start();

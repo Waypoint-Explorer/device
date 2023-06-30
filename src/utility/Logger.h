@@ -10,7 +10,7 @@ class LoggerService {
      * @brief Function to initialize logger
      * @param enable : Enable or disable logger
      */
-    void init(bool enable);
+    void begin(bool enable);
 
     /**
      * @brief Function to print log message

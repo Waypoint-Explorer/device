@@ -30,8 +30,7 @@ void updateData(void* parameter) {
         device->errorsHandler->gps = gps.getGpsData(timeData);
 
         Logger.log("- ENV DATA UPDATE");
-        device->errorsHandler->file =
-            DeviceDataHandler::updateEnvData(envSensor.getEnvData(), device);
+        DeviceDataHandler::writeLastEnvData(envSensor.getEnvData(), device);
     }
     Logger.log("- DEAD ENV DATA");
     dataTaskStatus = STATUS_DEAD;
@@ -40,21 +39,21 @@ void updateData(void* parameter) {
 
 // Setup function
 void setup() {
-    Logger.init(true);
+    Logger.begin(true);
     Logger.log(".:: SETUP Device ::.");
 
     pinMode(LED_BUILTIN, OUTPUT);
     esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP);
 
     preferences.begin("device");
+    DeviceDataHandler::begin();
 
     device = new Device();
-    device->errorsHandler->sensor = envSensor.init();
 
     gps.init();
     timeData = TimeData();
 
-    DeviceDataHandler::init();
+    device->errorsHandler->sensor = envSensor.begin();
 
     // Check if wake up cause is undefined
     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED) {
@@ -75,14 +74,21 @@ void setup() {
             // Setup device data
             preferences.putBool("init", true);
             device->setup();
-            device->errorsHandler->file = DeviceDataHandler::initData(device);
+            device->errorsHandler->file =
+                DeviceDataHandler::initEnvDataJsonArray();
             device->errorsHandler->gps =
                 gps.getGpsData(timeData, device->position);
+
+            preferences.putString("id", device->id);
+            preferences.putBool("init", true);
+            // envSensor.calibrate(20);
         }
 
         Logger.log(".:: SLEEP Device ::.");
         esp_deep_sleep_start();
     }
+
+    device->id = preferences.getString("id");
 
     preferences.end();
 
@@ -95,8 +101,7 @@ void setup() {
     delay(100);
     while (dataTaskStatus == STATUS_ALIVE) {
     }
-
-    device->errorsHandler->log();
+    
     device->log();
 
     Logger.log(".:: SLEEP Device ::.");

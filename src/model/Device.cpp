@@ -6,10 +6,14 @@ Device::Device() {
     errorsHandler = new ErrorsHandler();
 }
 
-void Device::setup() { id = IdentifierGenerator::generateUniqueNumberId(16); }
+void Device::setup() {
+    id = IdentifierGenerator::generateUniqueNumberId(16);
+    Logger.log("ID: " + id);
+}
 
-String Device::getId() { return id; }
-void Device::log() {
-    Logger.log("Id: " + id);
+
+void Device::log(){
+    Logger.log("ID: " + id);
+    errorsHandler->log();
     position->log();
 }

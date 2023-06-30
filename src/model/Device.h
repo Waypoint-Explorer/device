@@ -22,20 +22,18 @@ class Device {
      */
     void setup();
 
-    /**
-     * @brief Function to get the id
-     * @return Id as string
-     */
-    String getId();
-
-    /* List of environmental data */
-    LinkedList<EnvData>* envDataList;
+    /* Unique id as string*/
+    String id;
 
     /* Error handler */
     ErrorsHandler* errorsHandler;
 
+    /**
+     * @brief Function for debug device
+     */
+    void log();
+
    private:
-    String id;
 };
 
 #endif

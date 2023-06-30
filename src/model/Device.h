@@ -6,6 +6,7 @@
 #include "LinkedList.h"
 #include "utility/ErrorsHandler.h"
 #include "utility/IdentifierGenerator.h"
+#include "Position.h"
 
 #define MAX_ENVDATA_ENTRIES 1000
 
@@ -28,11 +29,19 @@ class Device {
      */
     String getId();
 
+    /* Position as latitude and longitude */
+    Position* position;
+
     /* List of environmental data */
     LinkedList<EnvData>* envDataList;
 
     /* Error handler */
     ErrorsHandler* errorsHandler;
+
+    /**
+     * @brief Function for debug device
+    */
+    void log();
 
    private:
     String id;

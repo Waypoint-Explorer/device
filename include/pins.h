@@ -4,6 +4,6 @@
 /* Pins of devices */
 
 #define LED_BUILTIN 12
-#define RESET_BUTTON GPIO_NUM_27
+#define RESET_BUTTON GPIO_NUM_39
 
 #endif

@@ -15,21 +15,29 @@
 #define GAS_LOWER_LIMIT 5000
 #define GAS_UPPER_LIMIT 65000
 
+#define CALIBRATION_DELAY_MILLIS 3000
+
 /* Environmental Sensor class definition */
 class EnvSensor {
    public:
     Bsec sensor;
 
     /**
-     *  @brief Init sensor
+     *  @brief Begin sensor
      */
-    SensorError init();
+    SensorError begin();
 
     /**
      * @brief Get environmental data from sensor
      * @return environmental data object
      */
     EnvData getEnvData();
+
+    /**
+     * @brief Function to calibrate sensor
+     * @param cycles : Cycles of calibration
+     */
+    void calibrate(int cycles);
 
    private:
     /**

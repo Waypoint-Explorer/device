@@ -9,6 +9,11 @@
 class EntryData {
    public:
     /**
+     * @brief Constructor for EntryData
+     */
+    EntryData();
+
+    /**
      * @brief Contstructor to initialize entry data
      * @param envData : Environmental data
      * @param timestamp : Timestamp

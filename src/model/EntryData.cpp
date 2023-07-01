@@ -1,5 +1,10 @@
 #include "EntryData.h"
 
+EntryData::EntryData(){
+    this->envData = EnvData();
+    this->timestamp = 0;
+}
+
 EntryData::EntryData(EnvData envData, int64_t timestamp){
     this->envData = envData;
     this->timestamp = timestamp;

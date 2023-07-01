@@ -3,10 +3,12 @@
 
 #include "Arduino.h"
 #include "ArduinoJson.h"
+#include "LinkedList.h"
 #include "Logger.h"
 #include "SPIFFS.h"
 #include "errors.h"
 #include "model/Device.h"
+#include "model/EntryData.h"
 #include "strings.h"
 
 #define MAX_STORED_ELEMENTS 100
@@ -33,19 +35,18 @@ class DeviceDataHandler {
 
     /**
      * @brief Function that updates environmental data list with last reading
-     * @param envData : EnvData object containing the last reading
+     * @param entryData : EntryData object containing the last reading
      * @param device  : Device object
      * @return FileError in case of errors
      */
-    static FileError writeLastEnvData(EnvData envData, Device* device);
+    static FileError writeLastEnvData(EntryData entryData, Device* device);
 
     /**
-     * @brief Function that read environmental data list
-     * @param LinkedList<EnvData> : List of environmental data
+     * @brief Function that read entry data list
+     * @param LinkedList<EntryData> : List of entry data (EnvData e Timestamp)
      * @return FileError in case of errors
      */
-     static FileError readEnvDataList(LinkedList<EnvData>* envDataList);
-
+    static FileError readEnvDataList(LinkedList<EntryData>* entryDataList);
 };
 
 #endif

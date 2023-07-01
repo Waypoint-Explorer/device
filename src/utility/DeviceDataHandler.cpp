@@ -20,7 +20,7 @@ FileError DeviceDataHandler::initEnvDataJsonArray() {
     return FILE_OK;
 }
 
-FileError DeviceDataHandler::writeLastEnvData(EnvData envData, Device* device) {
+FileError DeviceDataHandler::writeLastEnvData(EntryData entryData, Device* device) {
     File file = SPIFFS.open(FILENAME, FILE_READ);
     DynamicJsonDocument doc(JSON_DOC_SIZE);
 
@@ -38,10 +38,11 @@ FileError DeviceDataHandler::writeLastEnvData(EnvData envData, Device* device) {
 
         JsonObject elem = array.createNestedObject();
 
-        elem[TEMPERATURE_LABEL] = envData.temperature;
-        elem[HUMIDITY_LABEL] = envData.humidity;
-        elem[PRESSURE_LABEL] = envData.pressure;
-        elem[AIR_QUALITY_LABEL] = envData.airQuality;
+        elem[TIMESTAMP_LABEL] = entryData.timestamp;
+        elem[TEMPERATURE_LABEL] = entryData.envData.temperature;
+        elem[HUMIDITY_LABEL] = entryData.envData.humidity;
+        elem[PRESSURE_LABEL] = entryData.envData.pressure;
+        elem[AIR_QUALITY_LABEL] = entryData.envData.airQuality;
 
         if (serializeJsonPretty(doc, file) == 0) {
             Logger.log("Failed to write to SPIFFS file");
@@ -57,7 +58,7 @@ FileError DeviceDataHandler::writeLastEnvData(EnvData envData, Device* device) {
     return FILE_OK;
 }
 
-FileError DeviceDataHandler::readEnvDataList(LinkedList<EnvData>* envDataList) {
+FileError DeviceDataHandler::readEnvDataList(LinkedList<EntryData>* entryDataList) {
     File file = SPIFFS.open(FILENAME, FILE_READ);
     DynamicJsonDocument doc(JSON_DOC_SIZE);
 
@@ -68,14 +69,15 @@ FileError DeviceDataHandler::readEnvDataList(LinkedList<EnvData>* envDataList) {
 
         // Add each element in list
         for (JsonObject elem : array) {
-            EnvData envData;
-            envData.temperature = elem[TEMPERATURE_LABEL].as<int>();
-            envData.humidity = elem[HUMIDITY_LABEL].as<int>();
-            envData.pressure = elem[PRESSURE_LABEL].as<int>();
-            envData.airQuality = elem[AIR_QUALITY_LABEL].as<int>();
-            envDataList->add(envData);
+            EntryData entryData;
+            entryData.timestamp = elem[TIMESTAMP_LABEL].as<int64_t>();
+            entryData.envData.temperature = elem[TEMPERATURE_LABEL].as<int>();
+            entryData.envData.humidity = elem[HUMIDITY_LABEL].as<int>();
+            entryData.envData.pressure = elem[PRESSURE_LABEL].as<int>();
+            entryData.envData.airQuality = elem[AIR_QUALITY_LABEL].as<int>();
+            entryDataList->add(entryData);
 
-            envData.log();
+            entryData.log();
         }
 
     } else {

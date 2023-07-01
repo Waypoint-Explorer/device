@@ -13,7 +13,13 @@ enum InitError { INIT_OK, INIT_FAIL };
 enum FileError { FILE_OK, FILE_CANT_OPEN, FILE_CANT_WRITE, FILE_CANT_READ };
 
 // Gps data error
-enum GpsError { GPS_OK, GPS_CANT_LOCATE };
+enum GpsError {
+    GPS_OK,
+    GPS_CANT_INIT,
+    GPS_CANT_LOCATE,
+    GPS_CANT_ENABLE,
+    GPS_CANT_DISABLE
+};
 
 // QR code errors
 enum QrCodeError { QR_OK, QR_CANT_CREATE };

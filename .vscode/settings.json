@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.tpp": "cpp",
+        "regex": "cpp",
+        "memory": "cpp",
+        "future": "cpp",
+        "istream": "cpp",
+        "functional": "cpp"
+    }
+}

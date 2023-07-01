@@ -1,12 +1,12 @@
 #include "Gps.h"
 
-TinyGsm modem(Serial1);
+TinyGsm modem(SerialAT);
 
-GpsError Gps::init() {
+GpsError Gps::begin() {
     modemPowerOn();
-    Serial1.begin(UART_BAUD, SERIAL_8N1, PIN_RX, PIN_TX);
+    SerialAT.begin(UART_BAUD, SERIAL_8N1, PIN_RX, PIN_TX);
     int counter = 0;
-    while (counter <= MAX_CYCLE) {
+    while (counter <= MAX_CYCLE_BEGIN) {
         counter++;
         if (!modem.testAT()) {
             Logger.log("Failed to restart modem!");
@@ -14,9 +14,10 @@ GpsError Gps::init() {
         } else {
             break;
         }
+        delay(DELAY_MILLIS);
     }
 
-    if (counter > MAX_CYCLE) return GPS_CANT_INIT;
+    if (counter > MAX_CYCLE_BEGIN) return GPS_CANT_INIT;
 
     return GPS_OK;
 }
@@ -27,7 +28,7 @@ GpsError Gps::getGpsData(TimeData timeData, Position* position) {
 
     float latitude, longitude, speed, accuracy, alt;
     int viewsat, usedsat, year, month, day, hour, min, sec, counter = 0;
-    while (counter <= MAX_CYCLE) {
+    while (counter <= MAX_CYCLE_GPS) {
         counter++;
         if (modem.getGPS(&latitude, &longitude, &speed, &alt, &viewsat,
                          &usedsat, &accuracy, &year, &month, &day, &hour, &min,
@@ -47,7 +48,7 @@ GpsError Gps::getGpsData(TimeData timeData, Position* position) {
         delay(DELAY_MILLIS);
     }
 
-    if (counter > MAX_CYCLE) return GPS_CANT_LOCATE;
+    if (counter > MAX_CYCLE_GPS) return GPS_CANT_LOCATE;
 
     Logger.log("Time & Date: " + timeData.getDate() + " " + timeData.getTime());
 
@@ -59,7 +60,7 @@ GpsError Gps::getGpsData(TimeData timeData, Position* position) {
 }
 
 bool Gps::enableGPS() {
-    // Set Modem GPS Power Control Pin to HIGH ,turn on GPS power
+    // Set Modem GPS Power Control Pin to HIGH, turn on GPS power
     modem.sendAT("+CGPIO=0,48,1,1");
     if (modem.waitResponse(GPS_RESPONSE) != 1) {
         Logger.log("Set GPS Power HIGH Failed");
@@ -70,7 +71,7 @@ bool Gps::enableGPS() {
 }
 
 bool Gps::disableGPS() {
-    // Set Modem GPS Power Control Pin to LOW ,turn off GPS power
+    // Set Modem GPS Power Control Pin to LOW, turn off GPS power
     modem.sendAT("+CGPIO=0,48,1,0");
     if (modem.waitResponse(GPS_RESPONSE) != 1) {
         Logger.log("Set GPS Power LOW Failed");

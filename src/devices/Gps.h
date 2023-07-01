@@ -10,8 +10,9 @@
 
 #define TINY_GSM_MODEM_SIM7000
 #define TINY_GSM_RX_BUFFER 1024  // Set RX buffer to 1Kb
+#define SerialAT Serial1
 
-//#define SerialAT Serial1
+// #define SerialAT Serial1
 #include <TinyGsmClient.h>
 
 #define UART_BAUD 9600
@@ -19,7 +20,8 @@
 #define PIN_RX 26
 #define PWR_PIN 4
 
-#define MAX_CYCLE 100
+#define MAX_CYCLE_BEGIN 50
+#define MAX_CYCLE_GPS 200
 #define DELAY_MILLIS 1000
 #define POWER_ON_MILLIS 1000
 #define POWER_OFF_MILLIS 1500
@@ -35,7 +37,7 @@ class Gps {
      * @brief Function to initialize gps modem
      * @return GpsError in case of error
      */
-    GpsError init();
+    GpsError begin();
 
     /**
      * @brief Function to initialize gps modem

@@ -1,6 +1,7 @@
 #include "Device.h"
 
 Device::Device() {
+    position = new Position(0, 0);
     errorsHandler = new ErrorsHandler();
 }
 
@@ -12,4 +13,5 @@ void Device::setup() {
 void Device::log(){
     Logger.log("ID: " + id);
     errorsHandler->log();
+    position->log();
 }

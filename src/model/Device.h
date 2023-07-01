@@ -2,8 +2,7 @@
 #define __DEVICE__
 
 #include "Arduino.h"
-#include "EnvData.h"
-#include "LinkedList.h"
+#include "Position.h"
 #include "utility/ErrorsHandler.h"
 #include "utility/IdentifierGenerator.h"
 
@@ -24,6 +23,9 @@ class Device {
 
     /* Unique id as string*/
     String id;
+
+    /* Position as latitude and longitude */
+    Position* position;
 
     /* Error handler */
     ErrorsHandler* errorsHandler;

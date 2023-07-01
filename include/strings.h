@@ -14,4 +14,6 @@
 #define PRESSURE_LABEL "pressure"
 #define AIR_QUALITY_LABEL "airQuality"
 
+#define TIMESTAMP_LABEL "timestamp"
+
 #endif

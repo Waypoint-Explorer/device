@@ -2,7 +2,7 @@
 
 TimeData::TimeData() { rtc.offset = ITALY_OFFSET; }
 
-void TimeData::SetTimeDate(int sec, int min, int hour, int day, int month,
+void TimeData::setTimeDate(int sec, int min, int hour, int day, int month,
                            int year) {
     rtc.setTime(sec, min, hour, day, month, year);
 }
@@ -25,7 +25,7 @@ void TimeData::setOffset(uint32_t offset) {
 
 String TimeData::toString() { return String(getTimestamp()); }
 
-void TimeData::log() { Logger.log("Timestamp: " + String(getTimestamp())); }
+void TimeData::log() { Logger.log("Timestamp: " + toString()); }
 
 uint32_t setDaylightSavingOffset() {
     // TODO low priority

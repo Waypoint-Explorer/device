@@ -1,7 +1,7 @@
 #include "ErrorsHandler.h"
 
 ErrorsHandler::ErrorsHandler() {
-    battery = BATTERY_OK;
+    battery = BATTERY_HIGH;
     init = INIT_OK;
     file = FILE_OK;
     gps = GPS_OK;

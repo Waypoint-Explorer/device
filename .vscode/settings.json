@@ -5,6 +5,7 @@
         "memory": "cpp",
         "future": "cpp",
         "istream": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "*.tcc": "cpp"
     }
 }

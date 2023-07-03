@@ -8,8 +8,9 @@
 
 // Task timer
 #define mS_TO_S_FACTOR 1000
-#define uS_TO_S_FACTOR 1000000
-#define TIME_TO_SLEEP UINT32_C(60 * 60 * uS_TO_S_FACTOR)  // 60 min   // Test 3 * uS_TO_S_FACTOR
+#define uS_TO_S_FACTOR 1000000LL
+#define TIME_TO_SLEEP 60 * 60
+#define FIRST_TIME_SLEEP 5
 
 // Admin reset
 #define TIME_RESET 5 * uS_TO_S_FACTOR
@@ -27,10 +28,16 @@
 // Task settings
 #define CORE_0 0
 #define CORE_1 1
-#define UPDATE_DATA_TASK_PRIORITY 10
-#define UPDATE_DATA_TASK_WORDS 10000
+#define UPDATE_BY_TIMER_TASK_WORDS 10000
+#define UPDATE_BY_TIMER_TASK_PRIORITY 10
+
+#define UPDATE_BY_BUTTON_TASK_WORDS 10000
+#define UPDATE_BY_BUTTON_TASK_PRIORITY 9
+
+#define DISPLAY_ROTATION 1
 
 
+#define SENSOR_CALIBRATION_CYCLES 2
 
 
 #endif

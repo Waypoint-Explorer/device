@@ -24,6 +24,8 @@ GpsError Gps::begin() {
 
 GpsError Gps::getGpsData(TimeData timeData, Position* position) {
     Logger.log("GET GPS DATA");
+    modemPowerOn();
+
     if (!enableGPS()) return GPS_CANT_ENABLE;
 
     float latitude, longitude, speed, accuracy, alt;
@@ -42,7 +44,7 @@ GpsError Gps::getGpsData(TimeData timeData, Position* position) {
                            " | Altitude: " + String(alt) + " | View Sat: " +
                            String(viewsat) + " | Used Sat: " + String(usedsat));
             }
-            timeData.SetTimeDate(sec, min, hour, day, month, year);
+            timeData.setTimeDate(sec, min, hour, day, month, year);
             break;
         }
         delay(DELAY_MILLIS);

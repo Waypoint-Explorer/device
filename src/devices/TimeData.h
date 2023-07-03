@@ -5,7 +5,7 @@
 #include "ESP32Time.h"
 #include "utility/Logger.h"
 
-#define ITALY_OFFSET 3600  // GMT+1
+#define ITALY_OFFSET 7200  // GMT+2
 
 /* Time Data class definition */
 class TimeData {
@@ -24,7 +24,7 @@ class TimeData {
      * @param  month : month (1-12)
      * @param  year  : year ie 2021
      */
-    void SetTimeDate(int sec, int min, int hour, int day, int month, int year);
+    void setTimeDate(int sec, int min, int hour, int day, int month, int year);
 
     /**
      * @brief Function that return date as string

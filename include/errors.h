@@ -4,7 +4,7 @@
 /* Errors enumerators */
 
 // Battery error
-enum BatteryError { BATTERY_OK, BATTERY_LOW };
+enum BatteryError { BATTERY_FULL, BATTERY_HALF, BATTERY_LOW };
 
 // Initialization error
 enum InitError { INIT_OK, INIT_FAIL };

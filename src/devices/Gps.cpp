@@ -24,7 +24,10 @@ GpsError Gps::begin() {
 
 GpsError Gps::getGpsData(TimeData timeData, Position* position) {
     Logger.log("GET GPS DATA");
+
     modemPowerOn();
+
+    GpsError gpsError = GPS_OK;
 
     if (!enableGPS()) return GPS_CANT_ENABLE;
 
@@ -50,15 +53,15 @@ GpsError Gps::getGpsData(TimeData timeData, Position* position) {
         delay(DELAY_MILLIS);
     }
 
-    if (counter > MAX_CYCLE_GPS) return GPS_CANT_LOCATE;
+    if (counter > MAX_CYCLE_GPS) gpsError = GPS_CANT_LOCATE;
 
     Logger.log("Time & Date: " + timeData.getDate() + " " + timeData.getTime());
 
-    if (!disableGPS()) return GPS_CANT_DISABLE;
+    if (!disableGPS()) gpsError = GPS_CANT_DISABLE;
 
     modemPowerOff();
 
-    return GPS_OK;
+    return gpsError;
 }
 
 bool Gps::enableGPS() {
@@ -91,10 +94,7 @@ void Gps::modemPowerOn() {
 }
 
 void Gps::modemPowerOff() {
-    pinMode(PWR_PIN, OUTPUT);
-    digitalWrite(PWR_PIN, HIGH);
-    delay(POWER_OFF_MILLIS);  // Datasheet Ton = 1.2S
-    digitalWrite(PWR_PIN, LOW);
+    modem.poweroff();
 }
 
 void Gps::modemRestart() {

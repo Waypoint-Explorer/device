@@ -46,6 +46,11 @@ class Gps {
      * @return GpsError in case of error
      */
     GpsError getGpsData(TimeData timeData, Position* position = NULL);
+    
+    /**
+     * @brief Function to power off modem
+     */
+    void modemPowerOff();
 
    private:
     /**
@@ -64,11 +69,6 @@ class Gps {
      * @brief Function to power on modem
      */
     void modemPowerOn();
-
-    /**
-     * @brief Function to power off modem
-     */
-    void modemPowerOff();
 
     /**
      * @brief Function to restart modem

@@ -19,7 +19,7 @@ ErrorsHandler::ErrorsHandler(byte battery, byte init, byte file, byte gps,
     this->sensor = sensor;
 }
 
-String ErrorsHandler::getString() {
+String ErrorsHandler::toString() {
     return String(battery) + String(init) + String(file) + String(gps) +
            String(qrCode) + String(sensor);
 }

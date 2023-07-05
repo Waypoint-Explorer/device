@@ -2,15 +2,28 @@
 #define __CONFIG__
 
 #include "Arduino.h"
+#include "Button.h"
+#include "Preferences.h"
 #include "Wire.h"
+#include "devices/Battery.h"
+#include "devices/Display.h"
+#include "devices/EnvSensor.h"
+#include "devices/Gps.h"
+#include "fonts.h"
+#include "model/Device.h"
+#include "model/EnvData.h"
+#include "pins.h"
+#include "utility/DeviceDataHandler.h"
+#include "utility/Logger.h"
+#include "utility/QrCodeHandler.h"
 
 /* Configuration main */
 
 // Task timer
 #define mS_TO_S_FACTOR 1000
 #define uS_TO_S_FACTOR 1000000LL
-#define TIME_TO_SLEEP 60 * 60
-#define FIRST_TIME_SLEEP 5
+#define TIME_TO_SLEEP 60 * 60  // 60 min
+#define FIRST_TIME_SLEEP 2     // seconds
 
 // Admin reset
 #define TIME_RESET 5 * uS_TO_S_FACTOR
@@ -36,8 +49,7 @@
 
 #define DISPLAY_ROTATION 1
 
-
+#define GET_GPS_DATA_COUNT 24
 #define SENSOR_CALIBRATION_CYCLES 2
-
 
 #endif

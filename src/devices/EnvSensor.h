@@ -34,10 +34,10 @@ class EnvSensor {
     EnvData getEnvData();
 
     /**
-     * @brief Function to calibrate sensor
+     * @brief Function to get calibrated data from sensor
      * @param cycles : Cycles of calibration
      */
-    void calibrate(int cycles);
+    EnvData getCalibratedEnvData(int cycles);
 
    private:
     /**

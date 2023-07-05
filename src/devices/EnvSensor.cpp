@@ -127,13 +127,14 @@ int EnvSensor::getAirQulity(float humidity, float gasResistance) {
 
 int EnvSensor::formatPressure(float pressure) { return (int)pressure / 10; }
 
-void EnvSensor::calibrate(int cycles) {
+EnvData EnvSensor::getCalibratedEnvData(int cycles) {
     Logger.log("START CALIBRATION!");
     int count = 0;
-    while (count <= cycles) {
+    while (count < cycles) {
         count++;
         getEnvData();
         delay(CALIBRATION_DELAY_MILLIS);
     }
     Logger.log("CALIBRATED!");
+    return getEnvData();
 }

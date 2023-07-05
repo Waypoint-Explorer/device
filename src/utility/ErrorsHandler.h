@@ -36,7 +36,7 @@ class ErrorsHandler {
      * @brief Function to get all errors as a single string of numbers
      * @return String of errors
      */
-    String getString();
+    String toString();
 
     /**
      * @brief Function to debug errors

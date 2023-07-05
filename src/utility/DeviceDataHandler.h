@@ -11,8 +11,8 @@
 #include "model/EntryData.h"
 #include "strings.h"
 
-#define MAX_STORED_ELEMENTS 100
-#define JSON_DOC_SIZE 10000
+#define MAX_STORED_ELEMENTS 240
+#define JSON_DOC_SIZE 24576 // Calculated with ArduinoJson Assistant
 
 /* Device Data Handler class definition */
 class DeviceDataHandler {

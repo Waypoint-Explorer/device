@@ -19,3 +19,17 @@ void Display::drawString(int xPos, int yPos, String str) {
 void Display::paint() { gfx.commit(); }
 
 void Display::clear() { gfx.fillBuffer(1); }
+
+void Display::fillRectangle(int xPos, int yPos, int width, int height) {
+    gfx.fillRect(xPos, yPos, width, height);
+}
+
+void Display::setColor(int color) { gfx.setColor(color); }
+
+void Display::setFont(const char *fontData) {
+    gfx.setFont(fontData);
+}
+
+void Display::setTextAlignment(TEXT_ALIGNMENT textAlignment) {
+    gfx.setTextAlignment(textAlignment);
+}

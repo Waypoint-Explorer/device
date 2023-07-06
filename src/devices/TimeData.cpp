@@ -20,9 +20,8 @@ int64_t TimeData::getTimestampMillis() {
 }
 
 int64_t TimeData::getSleepTimeInSeconds() {
-    if (rtc.getMinute() == 0) return 0;
-    int remainingMin = 60 - rtc.getMinute();
-    return remainingMin * 60;
+    if (rtc.getMinute() == 0 && rtc.getSecond() == 0) return 0;
+    return 3600 - (rtc.getMinute() * 60) - rtc.getSecond();
 }
 
 void TimeData::setOffset(uint32_t offset) {

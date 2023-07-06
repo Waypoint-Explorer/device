@@ -227,26 +227,27 @@ void updateByButton(void* parameter) {
             Serial.println("TASK_BY_BUTTON: GENERATE QR");
 
             xSemaphoreTake(xMutex, portMAX_DELAY);
-
             LinkedList<EntryData>* entrydataList = new LinkedList<EntryData>;
             DeviceDataHandler::readEnvDataList(entrydataList);
 
-            printEnvData();
             uint8_t qr[qrcodegen_BUFFER_LEN_MAX];
             String qrText =
                 QrCodeHandler::generateStringForQr(device, *entrydataList);
             QrCodeHandler::generateQrCode(qrText, qr);
             QrCodeHandler::displayQrCode(qr, display);
-            display.paint();
             display.clear();
-
+            printEnvData();
+            display.paint();
             xSemaphoreGive(xMutex);
 
-            vTaskDelay(pdMS_TO_TICKS(10000));
+            vTaskDelay(pdMS_TO_TICKS(QR_CODE_DISPLAY_TIME));
 
+            xSemaphoreTake(xMutex, portMAX_DELAY);
+            display.clear();
             printEnvData();
             display.drawString(50, 220, "PREMI IL PULSANTE SOTTO");
             display.paint();
+            xSemaphoreGive(xMutex);
 
             updateByButtonStatus = STATUS_DEAD;
             Logger.log("TASK_BY_BUTTON: DEAD executed");
@@ -264,7 +265,10 @@ void updateByButton(void* parameter) {
 
 /* Print environmental data on top of screen */
 void printEnvData() {
-    display.drawString(120, 10, timeData.getDate());
+    display.drawString(110, 10, timeData.getDate());
+
+    // TODO: remove this
+    display.drawString(250, 10, String(timeData.getSleepTimeInSeconds()) + "s");
 
     display.drawString(
         5, 40, "Temperatura: " + String(lastEnvData.temperature) + "°C");

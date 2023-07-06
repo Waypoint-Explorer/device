@@ -20,12 +20,10 @@ void QrCodeHandler::displayQrCode(uint8_t qr[qrcodegen_BUFFER_LEN_MAX],
     for (int y = 0; y < size; y++) {
         for (int x = 0; x < size; x++) {
             if (qrcodegen_getModule(qr, x, y)) {
-                // Serial.print("*");
                 display.setColor(EPD_BLACK);
                 display.fillRectangle(x * pixel + offsetX, y * pixel + offsetY,
                                       pixel, pixel);
             } else {
-                // Serial.print(" ");
                 display.setColor(EPD_WHITE);
                 display.fillRectangle(x * pixel + offsetX, y * pixel + offsetY,
                                       pixel, pixel);
@@ -34,24 +32,20 @@ void QrCodeHandler::displayQrCode(uint8_t qr[qrcodegen_BUFFER_LEN_MAX],
     }
 }
 
-// TODO: remove | used for tests
 String QrCodeHandler::generateStringForQr(Device* device,
                                           LinkedList<EntryData> entryDataList) {
     String data = "";
     data += entryDataList.get(0).timestamp;
-    data += "|";
     for (int i = 0; i <= entryDataList.size() - 1; i++) {
         data += formatHoursToString(
-            ((entryDataList.get(i).timestamp - entryDataList.get(0).timestamp) /
-             S_TO_HOUR_FACTOR),
+            (entryDataList.get(i).timestamp - entryDataList.get(0).timestamp) /
+                S_TO_HOUR_FACTOR,
             HOUR_COUNT_LENGTH);
-        data += "|";
         data += entryDataList.get(i).envData.toString();
-        data += "|";
     }
 
-    return device->id + "|" + IdentifierGenerator::generateUniqueNumberId(32) +
-           "|" + device->errorsHandler->toString() + "|" + data;
+    return device->id + IdentifierGenerator::generateUniqueNumberId(32) +
+           device->errorsHandler->toString() + data;
 }
 
 String QrCodeHandler::formatHoursToString(int number, int length) {

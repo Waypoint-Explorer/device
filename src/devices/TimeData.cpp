@@ -19,6 +19,12 @@ int64_t TimeData::getTimestampMillis() {
     return (tv.tv_sec * 1000LL + (tv.tv_usec / 1000LL));
 }
 
+int64_t TimeData::getSleepTimeInSeconds() {
+    if (rtc.getMinute() == 0) return 0;
+    int remainingMin = 60 - rtc.getMinute();
+    return remainingMin * 60;
+}
+
 void TimeData::setOffset(uint32_t offset) {
     rtc.offset = offset + setDaylightSavingOffset();
 }
@@ -28,6 +34,6 @@ String TimeData::toString() { return String(getTimestamp()); }
 void TimeData::log() { Logger.log("Timestamp: " + toString()); }
 
 uint32_t setDaylightSavingOffset() {
-    // TODO low priority
+    // TODO: low priority
     return 0;
 }

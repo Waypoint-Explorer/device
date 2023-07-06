@@ -57,6 +57,12 @@ class TimeData {
     void setOffset(uint32_t offset = ITALY_OFFSET);
 
     /**
+     * @brief Function that return sleep time in seconds (hour by hour)
+     * @return Seconds to sleep
+     */
+    int64_t getSleepTimeInSeconds();
+
+    /**
      * @brief Function to get time data as string
      * @return String timestamp
      */

@@ -23,7 +23,6 @@
 #define mS_TO_S_FACTOR 1000
 #define uS_TO_S_FACTOR 1000000LL
 #define TIME_TO_SLEEP 60 * 60  // 60 min
-#define FIRST_TIME_SLEEP 2     // seconds
 
 // Admin reset
 #define TIME_RESET 5 * uS_TO_S_FACTOR

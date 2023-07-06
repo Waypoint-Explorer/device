@@ -2,16 +2,19 @@
 #define __QR_CODE_HANLDER__
 
 #include "Arduino.h"
+#include "IdentifierGenerator.h"
+#include "LinkedList.h"
 #include "devices/Display.h"
 #include "errors.h"
-#include "qrcodegen.h"
-#include "utility/Logger.h"
 #include "model/Device.h"
 #include "model/EntryData.h"
-#include "LinkedList.h"
-#include "IdentifierGenerator.h"
+#include "qrcodegen.h"
+#include "utility/Logger.h"
 
-/* Battery class definition */
+#define S_TO_HOUR_FACTOR 3600
+#define HOUR_COUNT_LENGTH 3
+
+/* Qr Code Handler class definition */
 class QrCodeHandler {
    public:
     /**
@@ -33,15 +36,23 @@ class QrCodeHandler {
                               int offsetY = 105);
 
     /**
-     * @brief Function that generates the string for QR code from data stored in File
+     * @brief Function that generates the string for QR code from data stored in
+     * File
      * @param device : Device object
      * @param entryDataList : List of entry data used to generate the string
      * @return String of all collected data
      */
     static String generateStringForQr(Device* device,
-                                    LinkedList<EntryData> entryDataList);
+                                      LinkedList<EntryData> entryDataList);
 
    private:
+    /**
+     * @brief Function that format hours to string adding 0 as padding based on wanted length
+     * @param hours  : Hours to convert as string
+     * @param length : Length of wanted string
+     * @return String of hours and padding 0 if needed
+     */
+    static String formatHoursToString(int hours, int length);
 };
 
 #endif

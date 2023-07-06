@@ -34,13 +34,30 @@ void QrCodeHandler::displayQrCode(uint8_t qr[qrcodegen_BUFFER_LEN_MAX],
     }
 }
 
+// TODO: remove | used for tests
 String QrCodeHandler::generateStringForQr(Device* device,
                                           LinkedList<EntryData> entryDataList) {
     String data = "";
+    data += entryDataList.get(0).timestamp;
+    data += "|";
     for (int i = 0; i <= entryDataList.size() - 1; i++) {
-        data += entryDataList.get(i).toString();
+        data += formatHoursToString(
+            ((entryDataList.get(i).timestamp - entryDataList.get(0).timestamp) /
+             S_TO_HOUR_FACTOR),
+            HOUR_COUNT_LENGTH);
+        data += "|";
+        data += entryDataList.get(i).envData.toString();
+        data += "|";
     }
 
-    return device->id + IdentifierGenerator::generateUniqueNumberId(32) +
-           device->errorsHandler->toString() + data;
+    return device->id + "|" + IdentifierGenerator::generateUniqueNumberId(32) +
+           "|" + device->errorsHandler->toString() + "|" + data;
+}
+
+String QrCodeHandler::formatHoursToString(int number, int length) {
+    char buffer[length + 1];
+    String str = "%0" + String(length) + "d";
+    if (snprintf(buffer, sizeof(buffer), str.c_str(), number) == -1)
+        snprintf(buffer, sizeof(buffer), str.c_str(), 0);
+    return String(buffer);
 }

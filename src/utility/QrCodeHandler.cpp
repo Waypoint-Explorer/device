@@ -38,8 +38,8 @@ String QrCodeHandler::generateStringForQr(Device* device,
     data += entryDataList.get(0).timestamp;
     for (int i = 0; i <= entryDataList.size() - 1; i++) {
         data += formatHoursToString(
-            (entryDataList.get(i).timestamp - entryDataList.get(0).timestamp) /
-                S_TO_HOUR_FACTOR,
+            round((double)(entryDataList.get(i).timestamp - entryDataList.get(0).timestamp) /
+                S_TO_HOUR_FACTOR),
             HOUR_COUNT_LENGTH);
         data += entryDataList.get(i).envData.toString();
     }

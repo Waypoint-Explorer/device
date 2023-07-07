@@ -1,6 +1,6 @@
 #include "TimeData.h"
 
-TimeData::TimeData() { rtc.offset = ITALY_OFFSET; }
+TimeData::TimeData() { rtc.offset = TIME_OFFSET; }
 
 void TimeData::setTimeDate(int sec, int min, int hour, int day, int month,
                            int year) {
@@ -20,14 +20,9 @@ int64_t TimeData::getTimestampMillis() {
 }
 
 void TimeData::setOffset(uint32_t offset) {
-    rtc.offset = offset + setDaylightSavingOffset();
+    rtc.offset = offset;
 }
 
 String TimeData::toString() { return String(getTimestamp()); }
 
 void TimeData::log() { Logger.log("Timestamp: " + toString()); }
-
-uint32_t setDaylightSavingOffset() {
-    // TODO low priority
-    return 0;
-}

@@ -5,7 +5,7 @@
 #include "ESP32Time.h"
 #include "utility/Logger.h"
 
-#define ITALY_OFFSET 7200  // GMT+2
+#define TIME_OFFSET 0
 
 /* Time Data class definition */
 class TimeData {
@@ -54,7 +54,7 @@ class TimeData {
      * @brief Function to set the internal RTC time
      * @param  offset : Offset in seconds
      */
-    void setOffset(uint32_t offset = ITALY_OFFSET);
+    void setOffset(uint32_t offset = TIME_OFFSET);
 
     /**
      * @brief Function that return sleep time in seconds (hour by hour)
@@ -75,12 +75,6 @@ class TimeData {
 
    private:
     ESP32Time rtc;
-
-    /**
-     * @brief Function to set the daylight saving offset
-     * @return  Offset daylight saving (0 or 3600)
-     */
-    uint32_t setDaylightSavingOffset();
 };
 
 #endif

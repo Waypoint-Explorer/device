@@ -229,20 +229,17 @@ void updateByButton(void* parameter) {
             xSemaphoreTake(xMutex, portMAX_DELAY);
             LinkedList<EntryData>* entrydataList = new LinkedList<EntryData>;
             DeviceDataHandler::readEnvDataList(entrydataList);
-
+            display.clear();
+            printEnvData();
             uint8_t qr[qrcodegen_BUFFER_LEN_MAX];
             String qrText =
                 QrCodeHandler::generateStringForQr(device, *entrydataList);
             QrCodeHandler::generateQrCode(qrText, qr);
             QrCodeHandler::displayQrCode(qr, display);
-            display.clear();
-            printEnvData();
             display.paint();
-            xSemaphoreGive(xMutex);
 
             vTaskDelay(pdMS_TO_TICKS(QR_CODE_DISPLAY_TIME));
 
-            xSemaphoreTake(xMutex, portMAX_DELAY);
             display.clear();
             printEnvData();
             display.drawString(50, 220, "PREMI IL PULSANTE SOTTO");

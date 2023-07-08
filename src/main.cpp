@@ -22,9 +22,10 @@ SemaphoreHandle_t xMutex;
 
 RTC_DATA_ATTR uint8_t countGpsRead = 0;
 
-void printEnvData();
 void updateByTimer(void* parameter);
 void updateByButton(void* parameter);
+void printEnvData();
+void printQrBackground();
 
 // Setup function
 void setup() {
@@ -64,7 +65,7 @@ void setup() {
             if (btnReset.checkPress() == LONG_PRESS) {
                 Logger.log("• DEVICE RESET");
                 display.clear();
-                display.drawString(70, 20, ".:: RESET DEVICE ::.");
+                display.drawStringHCentered(20, ".:: RESET DEVICE ::.");
                 display.paint();
                 // Reset device
                 preferences.putBool("init", false);
@@ -74,7 +75,8 @@ void setup() {
         }
 
         display.clear();
-        display.drawString(85, 5, ".:: SETUP DEVICE ::.");
+        display.setFont(Cousine_Bold_21);
+        display.drawStringHCentered(5, ".:: SETUP DEVICE ::.");
         display.paint();
 
         // Check if already initialized
@@ -92,12 +94,15 @@ void setup() {
             preferences.putBool("init", true);
 
             display.clear();
-            display.drawString(85, 20, ".:: INIT DEVICE ::.");
-            display.drawString(55, 40, "ID: " + device->id);
+            display.setFont(Cousine_Bold_21);
+            display.drawStringHCentered(20, ".:: INIT DEVICE ::.");
+            display.setFont(Cousine_Bold_16);
+            display.drawStringHCentered(40, "ID: " + device->id);
             display.paint();
         }
 
-        display.drawString(20, 100, "GET GPS DATA......");
+        display.setFont(Cousine_Bold_21);
+        display.drawString(20, 100, "GET GPS DATA.....");
         display.paint();
         Logger.log("• GPS");
         gps.begin();
@@ -109,13 +114,16 @@ void setup() {
             ? display.drawString(230, 100, "DONE")
             : display.drawString(230, 100, "ERROR");
 
-        display.drawString(80, 140, ".:: SETUP DONE ::.");
+        display.drawStringHCentered(140, ".:: SETUP DONE ::.");
         display.paint();
 
         display.clear();
         lastEnvData = envSensor.getCalibratedEnvData(10);
         printEnvData();
+        printQrBackground();
         display.paint();
+
+        delay(100);
 
         esp_sleep_enable_timer_wakeup(timeData.getSleepTimeInSeconds() *
                                       uS_TO_S_FACTOR);
@@ -198,6 +206,7 @@ void updateByTimer(void* parameter) {
             DeviceDataHandler::writeLastEnvData(
                 EntryData(lastEnvData, timeData.getTimestamp()), device);
 
+            display.clear();
             printEnvData();
             display.paint();
 
@@ -242,7 +251,7 @@ void updateByButton(void* parameter) {
 
             display.clear();
             printEnvData();
-            display.drawString(50, 220, "PREMI IL PULSANTE SOTTO");
+            printQrBackground();
             display.paint();
             xSemaphoreGive(xMutex);
 
@@ -262,20 +271,35 @@ void updateByButton(void* parameter) {
 
 /* Print environmental data on top of screen */
 void printEnvData() {
-    display.drawString(110, 10, timeData.getDate());
+    display.drawXBitmap(0, 0, ENV_DATA_BG_WIDTH, ENV_DATA_BG_HEIGHT,
+                        envDataBackground);
+
+    display.setFont(ArialMT_Plain_16);
+    display.drawString(110, 0, timeData.getDate());
 
     // TODO: remove this
-    display.drawString(250, 10, String(timeData.getSleepTimeInSeconds()) + "s");
+    // display.drawString(250, 10, String(timeData.getSleepTimeInSeconds()) +
+    // "s");
 
     display.drawString(
-        5, 40, "Temperatura: " + String(lastEnvData.temperature) + "°C");
-    display.drawString(160, 40,
+        12, 30, "Temperatura: " + String(lastEnvData.temperature) + "°C");
+    display.drawString(167, 30,
                        "Qualità aria: " + String(lastEnvData.airQuality) + "%");
-    display.drawString(5, 70, "Umidità: " + String(lastEnvData.humidity) + "%");
+    display.drawString(12, 60,
+                       "Umidità: " + String(lastEnvData.humidity) + "%");
     display.drawString(
-        120, 70,
+        130, 60,
         "Pressione:" + String((float)lastEnvData.pressure / 10, 1) + " hPa");
 }
 
-// Loop functionn never used
+void printQrBackground() {
+    display.drawXBitmap(0, 100, QR_BG_WIDTH, QR_BG_HEIGHT, qrBackground);
+    display.setFont(Cousine_Bold_16);
+    display.drawStringHCentered(200, "PREMI IL PULSANTE");
+    display.drawStringHCentered(220, "PER GENERARE");
+    display.drawStringHCentered(240, "IL CODICE QR");
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+}
+
+// Loop function never used
 void loop() {}

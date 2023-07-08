@@ -14,6 +14,7 @@
 #include "model/EnvData.h"
 #include "pins.h"
 #include "utility/DeviceDataHandler.h"
+#include "images.h"
 #include "utility/Logger.h"
 #include "utility/QrCodeHandler.h"
 

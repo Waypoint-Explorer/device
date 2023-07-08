@@ -7,8 +7,8 @@
 #include "MiniGrafx.h"
 #include "utility/Logger.h"
 
-#define SCREEN_WIDTH 400.0
-#define SCREEN_HEIGHT 300.0
+#define SCREEN_WIDTH 300
+#define SCREEN_HEIGHT 400
 #define BITS_PER_PIXEL 1
 #define EPD_BLACK 0
 #define EPD_WHITE 1
@@ -43,6 +43,13 @@ class Display {
     void drawString(int xPos, int yPos, String str);
 
     /**
+     * @brief Function that draw a string horizontally centered and y position
+     * @param yPos : Y position
+     * @param str  : String to be written
+     */
+    void drawStringHCentered(int yPos, String str);
+
+    /**
      * @brief Function that fill a rectagle in x and y position width*height
      * @param xPos   : X position
      * @param yPos   : Y position
@@ -68,6 +75,17 @@ class Display {
      * @param fontData : Font
      */
     void setTextAlignment(TEXT_ALIGNMENT textAlignment);
+
+    /**
+     * @brief Function that draw a width*height xBitmap in x and y position
+     * @param xPos    : X position
+     * @param yPos    : Y position
+     * @param width   : Width of the bitmap
+     * @param height  : Height of the bitmap
+     * @param xBitmap : xBitmap to draw
+     */
+    void drawXBitmap(int xPos, int yPos, int width, int height,
+                     const char *xBitmap);
 
     /**
      * @brief Function that commits the draws to display

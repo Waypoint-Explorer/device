@@ -10,11 +10,12 @@
 #include "devices/EnvSensor.h"
 #include "devices/Gps.h"
 #include "fonts.h"
+#include "images.h"
 #include "model/Device.h"
 #include "model/EnvData.h"
 #include "pins.h"
+#include "typedata.h"
 #include "utility/DeviceDataHandler.h"
-#include "images.h"
 #include "utility/Logger.h"
 #include "utility/QrCodeHandler.h"
 

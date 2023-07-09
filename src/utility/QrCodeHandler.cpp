@@ -37,7 +37,7 @@ String QrCodeHandler::generateStringForQr(Device* device,
     String data = "";
     data += entryDataList.get(0).timestamp;
     for (int i = 0; i <= entryDataList.size() - 1; i++) {
-        data += formatHoursToString(
+        data += StringFormatter::formatNumberToStringWithSign(
             round((double)(entryDataList.get(i).timestamp - entryDataList.get(0).timestamp) /
                 S_TO_HOUR_FACTOR),
             HOUR_COUNT_LENGTH);
@@ -46,12 +46,4 @@ String QrCodeHandler::generateStringForQr(Device* device,
 
     return device->id + IdentifierGenerator::generateUniqueNumberId(32) +
            device->errorsHandler->toString() + data;
-}
-
-String QrCodeHandler::formatHoursToString(int number, int length) {
-    char buffer[length + 1];
-    String str = "%0" + String(length) + "d";
-    if (snprintf(buffer, sizeof(buffer), str.c_str(), number) == -1)
-        snprintf(buffer, sizeof(buffer), str.c_str(), 0);
-    return String(buffer);
 }

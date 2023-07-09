@@ -3,6 +3,12 @@
 
 #include "Arduino.h"
 #include "utility/Logger.h"
+#include "utility/StringFormatter.h"
+
+#define TEMPERATURE_LENGTH 3
+#define HUMIDITY_LENGTH 2
+#define PRESSURE_LENGTH 5
+#define AIR_QUALITY_LENGTH 2
 
 /* Environmental Data class definition */
 class EnvData {

@@ -10,6 +10,7 @@
 #include "model/EntryData.h"
 #include "qrcodegen.h"
 #include "utility/Logger.h"
+#include "utility/StringFormatter.h"
 
 #define S_TO_HOUR_FACTOR 3600
 #define HOUR_COUNT_LENGTH 3
@@ -46,13 +47,6 @@ class QrCodeHandler {
                                       LinkedList<EntryData> entryDataList);
 
    private:
-    /**
-     * @brief Function that format hours to string adding 0 as padding based on wanted length
-     * @param hours  : Hours to convert as string
-     * @param length : Length of wanted string
-     * @return String of hours and padding 0 if needed
-     */
-    static String formatHoursToString(int hours, int length);
 };
 
 #endif

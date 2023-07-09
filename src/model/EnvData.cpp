@@ -9,8 +9,14 @@ EnvData::EnvData() {
 }
 
 String EnvData::toString() {
-    return formatData(true, temperature) + String(pressure) + formatData(false, humidity) +
-           formatData(false, airQuality);
+    return StringFormatter::formatNumberToStringWithSign(
+               temperature, TEMPERATURE_LENGTH, true) +
+           StringFormatter::formatNumberToStringWithSign(pressure,
+                                                         PRESSURE_LENGTH) +
+           StringFormatter::formatNumberToStringWithSign(humidity,
+                                                         HUMIDITY_LENGTH) +
+           StringFormatter::formatNumberToStringWithSign(airQuality,
+                                                         AIR_QUALITY_LENGTH);
 }
 
 void EnvData::log() {
@@ -18,19 +24,4 @@ void EnvData::log() {
                String(pressure) + " hPA | H " + String(humidity) + " % | AQ " +
                String(airQuality) + " % | GR " + String(gasResistance) +
                " Ohm");
-}
-
-String EnvData::formatData(bool sign, int value) {
-    //* TODO: generalize to more digits
-    String str = "";
-    if (sign)
-        if (value < 0)
-            str += "0";
-        else
-            str += "1";
-
-    if (abs(value) < 10) str += "0";
-
-    str += abs(value);
-    return str;
 }

@@ -35,19 +35,24 @@ class Display {
     Display(int rotation);
 
     /**
-     * @brief Function that draw a string in x and y position
-     * @param xPos : X position
-     * @param yPos : Y position
-     * @param str  : String to be written
+     * @brief Function that draw a string with font, in x and y position
+     * @param xPos     : X position
+     * @param yPos     : Y position
+     * @param str      : String to be written
+     * @param fontData : Font to be used
      */
-    void drawString(int xPos, int yPos, String str);
+    void drawString(int xPos, int yPos, String str,
+                    const char *fontData = ArialMT_Plain_16);
 
     /**
-     * @brief Function that draw a string horizontally centered and y position
-     * @param yPos : Y position
-     * @param str  : String to be written
+     * @brief Function that draw a string with font, horizontally centered and
+     * in y position
+     * @param yPos     : Y position
+     * @param str      : String to be written
+     * @param fontData : Font to be used
      */
-    void drawStringHCentered(int yPos, String str);
+    void drawStringHCentered(int yPos, String str,
+                             const char *fontData = ArialMT_Plain_16);
 
     /**
      * @brief Function that fill a rectagle in x and y position width*height
@@ -63,18 +68,6 @@ class Display {
      * @param color : Color integer
      */
     void setColor(int color);
-
-    /**
-     * @brief Function that set font of the text
-     * @param fontData : Font
-     */
-    void setFont(const char *fontData);
-
-    /**
-     * @brief Function that set text alignment
-     * @param fontData : Font
-     */
-    void setTextAlignment(TEXT_ALIGNMENT textAlignment);
 
     /**
      * @brief Function that draw a width*height xBitmap in x and y position

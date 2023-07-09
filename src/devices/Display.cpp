@@ -12,11 +12,13 @@ Display::Display(int rotation) {
     gfx.fillBuffer(EPD_WHITE);
 }
 
-void Display::drawString(int xPos, int yPos, String str) {
+void Display::drawString(int xPos, int yPos, String str, const char *fontData) {
+    gfx.setFont(fontData);
     gfx.drawString(xPos, yPos, str);
 }
 
-void Display::drawStringHCentered(int yPos, String str) {
+void Display::drawStringHCentered(int yPos, String str, const char *fontData) {
+    gfx.setFont(fontData);
     int xPos =
         (SCREEN_WIDTH - gfx.getStringWidth(str.c_str(), str.length())) / 2;
     gfx.drawString(xPos, yPos, str);
@@ -31,12 +33,6 @@ void Display::fillRectangle(int xPos, int yPos, int width, int height) {
 }
 
 void Display::setColor(int color) { gfx.setColor(color); }
-
-void Display::setFont(const char *fontData) { gfx.setFont(fontData); }
-
-void Display::setTextAlignment(TEXT_ALIGNMENT textAlignment) {
-    gfx.setTextAlignment(textAlignment);
-}
 
 void Display::drawXBitmap(int xPos, int yPos, int width, int height,
                           const char *bitmap) {

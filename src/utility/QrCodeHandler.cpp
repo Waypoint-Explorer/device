@@ -35,16 +35,17 @@ void QrCodeHandler::displayQrCode(uint8_t qr[qrcodegen_BUFFER_LEN_MAX],
 String QrCodeHandler::generateStringForQr(Device* device,
                                           LinkedList<EntryData> entryDataList) {
     String data = "";
-    data += entryDataList.get(0).timestamp;
-    for (int i = 0; i <= entryDataList.size() - 1; i++) {
-        data += StringFormatter::formatNumberToStringWithSign(
-            round((double)(entryDataList.get(i).timestamp -
-                           entryDataList.get(0).timestamp) /
-                  S_TO_HOUR_FACTOR),
-            HOUR_COUNT_LENGTH);
-        data += entryDataList.get(i).envData.toString();
+    if (entryDataList.size() > 0) {
+        data += entryDataList.get(0).timestamp;
+        for (int i = 0; i <= entryDataList.size() - 1; i++) {
+            data += StringFormatter::formatNumberToStringWithSign(
+                round((double)(entryDataList.get(i).timestamp -
+                               entryDataList.get(0).timestamp) /
+                      S_TO_HOUR_FACTOR),
+                HOUR_COUNT_LENGTH);
+            data += entryDataList.get(i).envData.toString();
+        }
     }
-
     return device->id + IdentifierGenerator::generateUniqueNumberId(32) +
            device->errorsData->toString() + data;
 }

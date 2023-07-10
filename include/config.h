@@ -21,6 +21,9 @@
 
 /* Configuration main */
 
+// Time to display init data
+#define INIT_DATA_DISPLAY_TIME 20000
+
 // Task timer
 #define mS_TO_S_FACTOR 1000
 #define uS_TO_S_FACTOR 1000000LL
@@ -59,9 +62,9 @@
 #define GET_GPS_DATA_COUNT 24
 
 // Sensor setting
-#define SENSOR_CALIBRATION_CYCLES 10
+#define SENSOR_CALIBRATION_CYCLES 5
 
 // QrCode setting
-#define QR_CODE_DISPLAY_TIME 10000 // millis
+#define QR_CODE_DISPLAY_TIME 20000
 
 #endif

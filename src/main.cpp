@@ -22,6 +22,7 @@ static volatile uint8_t updateByButtonStatus = STATUS_DEAD;
 SemaphoreHandle_t xMutex;
 
 RTC_DATA_ATTR uint8_t countGpsRead = 0;
+RTC_DATA_ATTR bool firstTimeGps = false;
 
 RTC_DATA_ATTR struct EnvDataStruct lastEnvDataRTC;
 RTC_DATA_ATTR struct ErrorsStruct errorsRTC;
@@ -38,6 +39,7 @@ void setup() {
     Logger.log(".:: WAKE UP Device ::.");
 
     pinMode(LED_BUILTIN, OUTPUT);
+
     xMutex = xSemaphoreCreateMutex();
 
     Logger.log("• DEVICE");
@@ -57,9 +59,13 @@ void setup() {
 
     esp_sleep_enable_ext0_wakeup(UPDATE_BUTTON, HIGH);
 
+    calibrateSensorStatus = STATUS_DEAD;
     updateByTimerStatus = STATUS_DEAD;
     updateByButtonStatus = STATUS_DEAD;
-    calibrateSensorStatus = STATUS_DEAD;
+
+    // Get data from RTC
+    device->retrieveErrorsFromRTC(&errorsRTC);
+    device->retrieveEnvDataFromRTC(&lastEnvDataRTC);
 
     /////////////// INIT DEVICE IF FIRST TIME /////////////////////
     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED) {
@@ -68,8 +74,7 @@ void setup() {
             if (btnReset.checkPress() == LONG_PRESS) {
                 Logger.log("• DEVICE RESET");
                 display.clear();
-                display.drawStringHCentered(20, ".:: RESET DEVICE ::.",
-                                            Cousine_Bold_21);
+                display.drawStringHCentered(5, "! RESET !", Cousine_Bold_21);
                 display.paint();
                 // Reset device
                 device->init = false;
@@ -82,7 +87,7 @@ void setup() {
         }
 
         display.clear();
-        display.drawStringHCentered(5, ".:: SETUP DEVICE ::.", Cousine_Bold_21);
+        display.drawStringHCentered(5, ".:: SETUP ::.", Cousine_Bold_21);
         display.paint();
 
         // Check if already initialized
@@ -99,14 +104,13 @@ void setup() {
                 DeviceDataHandler::initEnvDataJsonArray();
 
             display.clear();
-            display.drawStringHCentered(20, ".:: INIT DEVICE ::.",
-                                        Cousine_Bold_21);
-            display.drawStringHCentered(40, "ID: " + device->id,
+            display.drawStringHCentered(5, ".:: INIT ::.", Cousine_Bold_21);
+            display.drawStringHCentered(40, "Id: " + device->id,
                                         Cousine_Bold_16);
             display.paint();
         }
 
-        display.drawString(20, 100, "GET GPS DATA.....", Cousine_Bold_18);
+        display.drawString(20, 70, "DATI DAL GPS.......", Cousine_Bold_18);
         display.paint();
 
         // Create calibrate sensor task
@@ -119,18 +123,33 @@ void setup() {
         device->errorsData->gps =
             gps.getGpsData(timeDataHandler, device->position);
 
-        (device->errorsData->gps == GPS_OK)
-            ? display.drawString(230, 100, "DONE", Cousine_Bold_18)
-            : display.drawString(230, 100, "ERROR", Cousine_Bold_18);
+        if (device->errorsData->gps == GPS_OK) {
+            display.drawString(230, 70, "FATTO", Cousine_Bold_18);
+            display.drawStringHCentered(
+                90,
+                "Latitudine: " + String((float)device->position->latitude, 6),
+                Cousine_Bold_16);
+            display.drawStringHCentered(
+                110,
+                "Longitudine: " + String((float)device->position->longitude, 6),
+                Cousine_Bold_16);
+            device->storePositionToPreferences();
+            firstTimeGps = true;
+        } else {
+            display.drawString(230, 70, "ERRORE", Cousine_Bold_18);
+            firstTimeGps = false;
+        }
 
-        device->storePositionToPreferences();
+        display.paint();
+
+        delay(INIT_DATA_DISPLAY_TIME);
 
         // Wait task to finish
         delay(100);
         while (calibrateSensorStatus == STATUS_ALIVE) {
         }
 
-        display.drawStringHCentered(140, ".:: SETUP DONE ::.", Cousine_Bold_21);
+        display.drawStringHCentered(140, ".:: FINE ::.", Cousine_Bold_21);
         display.paint();
 
         display.clear();
@@ -158,10 +177,6 @@ void setup() {
     // Get data from Preferences
     device->retrieveIdFromPreferences();
     device->retrievePositionFromPreferences();
-
-    // Get data from RTC
-    device->retrieveErrorsFromRTC(&errorsRTC);
-    device->retrieveEnvDataFromRTC(&lastEnvDataRTC);
 
     // Create update data task
     xTaskCreatePinnedToCore(
@@ -202,9 +217,10 @@ void calibrateSensor(void* parameter) {
     *device->lastEnvData =
         envSensor.getCalibratedEnvData(SENSOR_CALIBRATION_CYCLES);
 
+    delay(50);
     Logger.log("TASK_CALIBRATION_SENSOR: DEAD");
     calibrateSensorStatus = STATUS_DEAD;
-    vTaskDelete(UpdateByButtonTask);
+    vTaskDelete(CalibrateSensorTask);
 }
 
 /* Function called by UpdateByTimerTask to update environmental data hourly */
@@ -213,7 +229,7 @@ void updateByTimer(void* parameter) {
     updateByTimerStatus = STATUS_ALIVE;
     while (1) {
         if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER ||
-            timeDataHandler.getSleepTimeInSeconds() == 0) {
+            timeDataHandler.getSleepTimeInSeconds() <= 0) {
             // get gps data every day to update time and date
             if (device->errorsData->gps != GPS_OK) {
                 device->errorsData->gps =
@@ -229,6 +245,7 @@ void updateByTimer(void* parameter) {
                     countGpsRead++;
                 }
             }
+            if (device->errorsData->gps == GPS_OK) firstTimeGps = true;
 
             Logger.log("TASK_BY_TIMER: UPDATE ENV DATA");
             *device->lastEnvData = envSensor.getCalibratedEnvData(10);
@@ -237,9 +254,13 @@ void updateByTimer(void* parameter) {
 
             device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
-            device->errorsData->file = DeviceDataHandler::writeLastEnvData(
-                EntryData(*device->lastEnvData, timeDataHandler.getTimestamp()),
-                device);
+            // At least first time gps must be ok to store data
+            if (firstTimeGps == true) {
+                device->errorsData->file = DeviceDataHandler::writeLastEnvData(
+                    EntryData(*device->lastEnvData,
+                              timeDataHandler.getTimestamp()),
+                    device);
+            }
 
             display.clear();
             printEnvData();
@@ -253,7 +274,7 @@ void updateByTimer(void* parameter) {
             vTaskDelete(UpdateByTimerTask);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(50));
+        delay(50);
         if (updateByButtonStatus == STATUS_DEAD) {
             Serial.println("TASK_BY_TIMER: DEAD");
             updateByTimerStatus = STATUS_DEAD;
@@ -275,6 +296,11 @@ void updateByButton(void* parameter) {
             LinkedList<EntryData>* entrydataList = new LinkedList<EntryData>;
             device->errorsData->file =
                 DeviceDataHandler::readEnvDataList(entrydataList);
+            float batteryLevel = 0;
+            device->errorsData->battery =
+                Battery::getBatteryLevel(&batteryLevel);
+            Logger.log("• BATTERY : " + String((float)batteryLevel));
+
             display.clear();
             printEnvData();
             uint8_t qr[qrcodegen_BUFFER_LEN_MAX];
@@ -285,15 +311,12 @@ void updateByButton(void* parameter) {
             QrCodeHandler::displayQrCode(qr, display, 5, 105);
             display.paint();
 
-            vTaskDelay(pdMS_TO_TICKS(QR_CODE_DISPLAY_TIME));
+            delay(QR_CODE_DISPLAY_TIME);
 
             display.clear();
             printEnvData();
             printQrBackground();
             display.paint();
-
-            device->errorsData = new ErrorsData();
-            device->storeErrorsToRTC(&errorsRTC);
 
             xSemaphoreGive(xMutex);
 
@@ -301,8 +324,7 @@ void updateByButton(void* parameter) {
             Logger.log("TASK_BY_BUTTON: DEAD executed");
             vTaskDelete(UpdateByButtonTask);
         }
-
-        vTaskDelay(pdMS_TO_TICKS(50));
+        delay(50);
         if (updateByTimerStatus == STATUS_DEAD) {
             Logger.log("TASK_BY_BUTTON: DEAD");
             updateByButtonStatus = STATUS_DEAD;
@@ -316,7 +338,10 @@ void printEnvData() {
     display.drawXBitmap(0, 0, ENV_DATA_BG_WIDTH, ENV_DATA_BG_HEIGHT,
                         envDataBackground);
 
-    display.drawString(110, 0, timeDataHandler.getDate());
+    (device->errorsData->gps == GPS_OK)
+        ? display.drawStringHCentered(0, timeDataHandler.getDate(),
+                                      Cousine_Bold_16)
+        : display.drawStringHCentered(0, "DATI", Cousine_Bold_16);
 
     display.drawString(
         12, 30,
@@ -338,6 +363,8 @@ void printQrBackground() {
     display.drawStringHCentered(200, "PREMERE IL PULSANTE", Cousine_Bold_16);
     display.drawStringHCentered(220, "PER GENERARE", Cousine_Bold_16);
     display.drawStringHCentered(240, "IL CODICE QR", Cousine_Bold_16);
+    display.drawXBitmap((SCREEN_WIDTH - ARROW_DOWN_WIDTH) / 2, 300,
+                        ARROW_DOWN_WIDTH, ARROW_DOWN_HEIGHT, arrowDown);
 }
 
 // Loop function never used

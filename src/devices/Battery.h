@@ -27,7 +27,7 @@ class Battery {
     static String toString();
 
     /**
-     * @brief Function for debug battery
+     * @brief Function to debug battery
      */
     static void log();
 

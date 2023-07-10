@@ -50,8 +50,8 @@ SensorError EnvSensor::begin() {
     return SENSOR_OK;
 }
 
-EnvData EnvSensor::getEnvData() {
-    EnvData envData = EnvData();
+EnvironmentalData EnvSensor::getEnvData() {
+    EnvironmentalData envData = EnvironmentalData();
     if (sensor.run()) {
         envData.temperature = sensor.rawTemperature;
         envData.humidity = sensor.rawHumidity - HUMIDITY_CORRECTION;
@@ -61,7 +61,7 @@ EnvData EnvSensor::getEnvData() {
         envData.gasResistance = sensor.gasResistance;
 
         // Debug
-        envData.log();
+        // envData.log();
     }
     return envData;
 }
@@ -100,8 +100,6 @@ float EnvSensor::getHumidityScore(float humidity) {
                              0.416666);
         }
     }
-
-    // Logger.log(String(humidityScore));
     return humidityScore;
 }
 
@@ -119,21 +117,22 @@ float EnvSensor::getGasScore(float gasResistance) {
     return gasScore;
 }
 
-int EnvSensor::getAirQulity(float humidity, float gasResistance) {
+int16_t EnvSensor::getAirQulity(float humidity, float gasResistance) {
     float airQualityScore =
         getHumidityScore(humidity) + getGasScore(gasResistance);
     return airQualityScore * 100;
 }
 
-int EnvSensor::formatPressure(float pressure) { return (int)pressure / 10; }
+int16_t EnvSensor::formatPressure(float pressure) { return (int)pressure / 10; }
 
-void EnvSensor::calibrate(int cycles) {
+EnvironmentalData EnvSensor::getCalibratedEnvData(int16_t cycles) {
     Logger.log("START CALIBRATION!");
-    int count = 0;
-    while (count <= cycles) {
+    int16_t count = 0;
+    while (count < cycles) {
         count++;
         getEnvData();
         delay(CALIBRATION_DELAY_MILLIS);
     }
     Logger.log("CALIBRATED!");
+    return getEnvData();
 }

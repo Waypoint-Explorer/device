@@ -1,27 +1,17 @@
-#include "Button.h"
-#include "Preferences.h"
 #include "config.h"
-#include "devices/Battery.h"
-#include "devices/Display.h"
-#include "devices/EnvSensor.h"
-#include "devices/Gps.h"
-#include "model/Device.h"
-#include "model/EnvData.h"
-#include "pins.h"
-#include "utility/DeviceDataHandler.h"
-#include "utility/Logger.h"
 
 LoggerService Logger;
-Preferences preferences;
-
 Device* device;
 EnvSensor envSensor;
-EnvData envData;
 Gps gps;
-TimeData timeData;
+TimeDataHandler timeDataHandler;
 Display display;
+
 Button btnReset(RESET_BUTTON, TIME_LONGPRESS_RESET);
 Button btnUpdate(UPDATE_BUTTON);
+
+TaskHandle_t CalibrateSensorTask;
+static volatile uint8_t calibrateSensorStatus = STATUS_DEAD;
 
 TaskHandle_t UpdateByTimerTask;
 static volatile uint8_t updateByTimerStatus = STATUS_DEAD;
@@ -29,20 +19,19 @@ static volatile uint8_t updateByTimerStatus = STATUS_DEAD;
 TaskHandle_t UpdateByButtonTask;
 static volatile uint8_t updateByButtonStatus = STATUS_DEAD;
 
-static volatile uint8_t updateDataStatus = STATUS_DEAD;
-
 SemaphoreHandle_t xMutex;
 
-int64_t espTime = 0;
-RTC_DATA_ATTR int64_t taskExeTime = 0;
-RTC_DATA_ATTR int64_t previousEspTime = 0;
-int64_t previousExeTime = 0;
+RTC_DATA_ATTR uint8_t countGpsRead = 0;
+RTC_DATA_ATTR bool firstTimeGps = false;
 
-RTC_DATA_ATTR int64_t timerWakeupRemaining = 0;
+RTC_DATA_ATTR struct EnvDataStruct lastEnvDataRTC;
+RTC_DATA_ATTR struct ErrorsStruct errorsRTC;
 
-void printEnvData(EnvData envData);
+void calibrateSensor(void* parameter);
 void updateByTimer(void* parameter);
 void updateByButton(void* parameter);
+void printEnvData();
+void printQrBackground();
 
 // Setup function
 void setup() {
@@ -50,100 +39,142 @@ void setup() {
     Logger.log(".:: WAKE UP Device ::.");
 
     pinMode(LED_BUILTIN, OUTPUT);
-    preferences.begin("device");
 
-    device = new Device();
-    timeData = TimeData();
     xMutex = xSemaphoreCreateMutex();
 
+    Logger.log("• DEVICE");
+    device = new Device();
+
+    Logger.log("• TIMEDATA");
+    timeDataHandler = TimeDataHandler();
+
+    Logger.log("• DATA HANDLER");
     DeviceDataHandler::begin();
-    gps.begin();
-    device->errorsHandler->sensor = envSensor.begin();
+
+    Logger.log("• ENV SENSOR");
+    device->errorsData->sensor = envSensor.begin();
+
+    Logger.log("• DISPLAY");
     display = Display(DISPLAY_ROTATION);
 
-    envData = envSensor.getEnvData();
+    esp_sleep_enable_ext0_wakeup(UPDATE_BUTTON, HIGH);
 
-    esp_sleep_enable_ext0_wakeup(UPDATE_BUTTON, 1);
-
+    calibrateSensorStatus = STATUS_DEAD;
     updateByTimerStatus = STATUS_DEAD;
     updateByButtonStatus = STATUS_DEAD;
 
-    updateDataStatus = STATUS_DEAD;
+    // Get data from RTC
+    device->retrieveErrorsFromRTC(&errorsRTC);
+    device->retrieveEnvDataFromRTC(&lastEnvDataRTC);
 
     /////////////// INIT DEVICE IF FIRST TIME /////////////////////
     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED) {
         // First seconds wait and check for reset button pressed
         while (esp_timer_get_time() <= TIME_RESET) {
             if (btnReset.checkPress() == LONG_PRESS) {
-                Logger.log("! DEVICE RESET");
+                Logger.log("• DEVICE RESET");
                 display.clear();
-                display.drawString(70, 20, "-- RESET DEVICE --");
+                display.drawStringHCentered(5, RESET_STRING, Cousine_Bold_21);
                 display.paint();
                 // Reset device
-                preferences.putBool("init", false);
+                device->init = false;
+                device->storeInitToPreferences();
                 DeviceDataHandler::reset();
+
+                device->endPreferences();
                 ESP.restart();
             }
         }
 
         display.clear();
-        display.drawString(70, 5, "-- SETUP DEVICE --");
+        display.drawStringHCentered(5, SETUP_STRING, Cousine_Bold_21);
         display.paint();
 
         // Check if already initialized
-        if (preferences.getBool("init") == false) {
-            Logger.log("@ INIT DATA");
+        device->retrieveInitFromPreferences();
+        if (device->init == false) {
+            Logger.log("• INIT DATA");
 
             // Setup device data
-            preferences.putBool("init", true);
+            device->init = true;
+            device->storeInitToPreferences();
             device->setup();
-            device->errorsHandler->file =
+            device->storeIdToPreferences();
+            device->errorsData->file =
                 DeviceDataHandler::initEnvDataJsonArray();
 
-            // Save preferences
-            preferences.putString("id", device->id);
-            preferences.putBool("init", true);
-
             display.clear();
-            display.drawString(85, 20, "-- INIT DEVICE --");
-            display.drawString(65, 40, "ID: " + device->id);
+            display.drawStringHCentered(5, INIT_STRING, Cousine_Bold_21);
+            display.drawStringHCentered(40, ID_STRING + device->id,
+                                        Cousine_Bold_16);
             display.paint();
         }
-        display.drawString(20, 75, "SENSOR CALIBRATION.......");
-        display.paint();
-        envSensor.calibrate(SENSOR_CALIBRATION_CYCLES);
-        display.drawString(230, 75, "DONE");
 
-        display.drawString(20, 100, "GET GPS DATA.......................");
-        display.paint();
-        device->errorsHandler->gps = gps.getGpsData(timeData, device->position);
-        preferences.putFloat("latitude", device->position->latitude);
-        preferences.putFloat("longitude", device->position->longitude);
-
-        (device->errorsHandler->gps == 0)
-            ? display.drawString(230, 100, "DONE")
-            : display.drawString(230, 100, "ERROR");
-
-        display.drawString(80, 140, "-- SETUP DONE --");
+        display.drawString(20, 70, GET_GPS_STRING, Cousine_Bold_18);
         display.paint();
 
-        previousEspTime = timeData.getTimestampMillis();
-        timerWakeupRemaining = TIME_TO_SLEEP * mS_TO_S_FACTOR;
+        // Create calibrate sensor task
+        xTaskCreatePinnedToCore(
+            calibrateSensor, "calibrateSensorTask", CALIBRATE_SENSOR_TASK_WORDS,
+            NULL, CALIBRATE_SENSOR_TASK_PRIORITY, &CalibrateSensorTask, CORE_0);
 
-        esp_sleep_enable_timer_wakeup(FIRST_TIME_SLEEP * uS_TO_S_FACTOR);
+        Logger.log("• GPS");
+        gps.begin();
+        device->errorsData->gps =
+            gps.getGpsData(timeDataHandler, device->position);
+
+        if (device->errorsData->gps == GPS_OK) {
+            display.drawString(230, 70, DONE_GPS_STRING, Cousine_Bold_18);
+            display.drawStringHCentered(
+                90, LAT_STRING + String((float)device->position->latitude, 6),
+                Cousine_Bold_16);
+            display.drawStringHCentered(
+                110, LON_STRING + String((float)device->position->longitude, 6),
+                Cousine_Bold_16);
+            device->storePositionToPreferences();
+            firstTimeGps = true;
+        } else {
+            display.drawString(230, 70, ERROR_GPS_STRING, Cousine_Bold_18);
+            firstTimeGps = false;
+        }
+
+        display.paint();
+
+        delay(INIT_DATA_DISPLAY_TIME);
+
+        // Wait task to finish
+        delay(100);
+        while (calibrateSensorStatus == STATUS_ALIVE) {
+        }
+
+        display.drawStringHCentered(140, DONE_SETUP_STRING, Cousine_Bold_21);
+        display.paint();
+
+        display.clear();
+        printEnvData();
+        printQrBackground();
+        display.paint();
+
+        delay(100);
+
+        Logger.log("• SAVE TO RTC: " + device->errorsData->toString());
+        device->storeErrorsToRTC(&errorsRTC);
+        device->storeLastEnvDataToRTC(&lastEnvDataRTC);
+
+        esp_sleep_enable_timer_wakeup(timeDataHandler.getSleepTimeInSeconds() *
+                                      uS_TO_S_FACTOR);
+        Logger.log("• SLEEP REMAINING: " +
+                   String(timeDataHandler.getSleepTimeInSeconds()));
+
+        device->endPreferences();
 
         Logger.log(".:: SLEEP Device ::.");
         esp_deep_sleep_start();
     }
 
     // Get data from Preferences
-    device->id = preferences.getString("id");
-    device->position->latitude = preferences.getFloat("latitude");
-    device->position->longitude = preferences.getFloat("longitude");
-
-    preferences.end();
-
-    previousExeTime = timeData.getTimestampMillis();
+    device->retrieveIdFromPreferences();
+    device->retrievePositionFromPreferences();
 
     // Create update data task
     xTaskCreatePinnedToCore(
@@ -158,125 +189,184 @@ void setup() {
     delay(100);
     while (updateByButtonStatus == STATUS_ALIVE ||
            updateByTimerStatus == STATUS_ALIVE) {
-        espTime = timeData.getTimestampMillis();
-
-        /*Logger.log("STATO QR: " + String(updateByButtonStatus) + " | espTime
-        (" + espTime + ") - previousTime(" + previousEspTime + ")" + " | TEMPO:
-        " + (espTime - previousEspTime)); delay(100);*/
-
-        if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0 &&
-            updateDataStatus == STATUS_DEAD) {
-            if (timerWakeupRemaining - taskExeTime <= 0) {
-                updateDataStatus = STATUS_ALIVE;
-                //  Assicuro che il task veda lo status nuovo
-                delay(100);
-            }
-        }
     }
 
-    taskExeTime = timeData.getTimestampMillis() - previousExeTime;
-    Logger.log("@ EXEC TASK TIME: " +
-               String((float)taskExeTime / mS_TO_S_FACTOR));
+    // Store data to RTC
+    device->storeErrorsToRTC(&errorsRTC);
+    device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
-    // new timer wakeup removing task execution time
-    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER ||
-        updateDataStatus == STATUS_ALIVE) {
-        timerWakeupRemaining = TIME_TO_SLEEP * mS_TO_S_FACTOR - taskExeTime;
-    } else {
-        if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0) {
-            timerWakeupRemaining -= taskExeTime;
-        }
-    }
+    gps.modemPowerOff();
+    device->endPreferences();
 
-    esp_sleep_enable_timer_wakeup(timerWakeupRemaining * mS_TO_S_FACTOR);
-
-    Logger.log("* UPDATE WAKE TIME TO: " +
-               String((float)timerWakeupRemaining / mS_TO_S_FACTOR));
-
-    device->log();
-
-    previousEspTime = timeData.getTimestampMillis();
+    esp_sleep_enable_timer_wakeup(timeDataHandler.getSleepTimeInSeconds() *
+                                  uS_TO_S_FACTOR);
+    Logger.log("• SLEEP REMAINING: " +
+               String(timeDataHandler.getSleepTimeInSeconds()));
 
     Logger.log(".:: SLEEP Device ::.");
     esp_deep_sleep_start();
 }
 
-// Function called by UpdateByTimerTask to update environmental data
+/* Function called by CalibrateSensorTask to calibrate sensor */
+void calibrateSensor(void* parameter) {
+    Logger.log("TASK_CALIBRATION_SENSOR: BORN");
+    calibrateSensorStatus = STATUS_ALIVE;
+
+    *device->lastEnvData =
+        envSensor.getCalibratedEnvData(SENSOR_CALIBRATION_CYCLES);
+
+    delay(50);
+    Logger.log("TASK_CALIBRATION_SENSOR: DEAD");
+    calibrateSensorStatus = STATUS_DEAD;
+    vTaskDelete(CalibrateSensorTask);
+}
+
+/* Function called by UpdateByTimerTask to update environmental data hourly */
 void updateByTimer(void* parameter) {
-    Logger.log("- BORN ENV DATA");
+    Logger.log("TASK_BY_TIMER: BORN");
     updateByTimerStatus = STATUS_ALIVE;
     while (1) {
         if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER ||
-            updateDataStatus == STATUS_ALIVE) {
-            Logger.log("- DATE/TIME UPDATE");
+            timeDataHandler.getSleepTimeInSeconds() <= 0) {
+            // get gps data every day to update time and date
+            if (device->errorsData->gps != GPS_OK) {
+                device->errorsData->gps =
+                    gps.getGpsData(timeDataHandler, device->position);
+                countGpsRead = 0;
+            } else {
+                if (countGpsRead >= GET_GPS_DATA_COUNT) {
+                    Logger.log("TASK_BY_TIMER: UPDATE TIME/DATE");
+                    gps.begin();
+                    device->errorsData->gps = gps.getGpsData(timeDataHandler);
+                    countGpsRead = 0;
+                } else {
+                    countGpsRead++;
+                }
+            }
+            if (device->errorsData->gps == GPS_OK) firstTimeGps = true;
 
-            device->errorsHandler->gps = gps.getGpsData(timeData);
+            Logger.log("TASK_BY_TIMER: UPDATE ENV DATA");
+            *device->lastEnvData = envSensor.getCalibratedEnvData(10);
 
-            Logger.log("- ENV DATA UPDATE");
+            xSemaphoreTake(xMutex, portMAX_DELAY);
 
-            DeviceDataHandler::writeLastEnvData(
-                EntryData(envData, timeData.getTimestamp()), device);
+            device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
-            printEnvData(envData);
+            // At least first time gps must be ok to store data
+            if (firstTimeGps == true) {
+                device->errorsData->file = DeviceDataHandler::writeLastEnvData(
+                    EntryData(*device->lastEnvData,
+                              timeDataHandler.getTimestamp()),
+                    device);
+            }
 
-            Logger.log("- DEAD ENV DATA");
+            display.clear();
+            printEnvData();
+            printQrBackground();
+            display.paint();
+
+            xSemaphoreGive(xMutex);
+
+            Logger.log("TASK_BY_TIMER: DEAD executed");
             updateByTimerStatus = STATUS_DEAD;
             vTaskDelete(UpdateByTimerTask);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(50));
+        delay(50);
         if (updateByButtonStatus == STATUS_DEAD) {
-            Serial.println("- DEAD ENV DATA outside");
+            Logger.log("TASK_BY_TIMER: DEAD");
             updateByTimerStatus = STATUS_DEAD;
             vTaskDelete(UpdateByTimerTask);
         }
     }
 }
 
+/* Function called by UpdateByButtonTask to generate QR code */
 void updateByButton(void* parameter) {
-    Serial.println("- BORN QR CODE");
+    Logger.log("TASK_BY_BUTTON: BORN");
     updateByButtonStatus = STATUS_ALIVE;
     while (1) {
         if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0 ||
             btnUpdate.checkPress() == SHORT_PRESS) {
-            Serial.println("- QR CODE UPDATE: " + updateByButtonStatus);
+            Logger.log("TASK_BY_BUTTON: GENERATE QR");
 
-            printEnvData(envData);
+            xSemaphoreTake(xMutex, portMAX_DELAY);
+            LinkedList<EntryData>* entrydataList = new LinkedList<EntryData>;
+            device->errorsData->file =
+                DeviceDataHandler::readEnvDataList(entrydataList);
+            float batteryLevel = 0;
+            device->errorsData->battery =
+                Battery::getBatteryLevel(&batteryLevel);
+            Logger.log("• BATTERY : " + String((float)batteryLevel));
+
+            display.clear();
+            printEnvData();
+            uint8_t qr[qrcodegen_BUFFER_LEN_MAX];
+            String qrText =
+                QrCodeHandler::generateStringForQr(device, *entrydataList);
+            device->errorsData->qrCode =
+                QrCodeHandler::generateQrCode(qrText, qr);
+            QrCodeHandler::displayQrCode(qr, display, 5, 105);
+            display.paint();
+
+            delay(QR_CODE_DISPLAY_TIME);
+
+            display.clear();
+            printEnvData();
+            printQrBackground();
+            display.paint();
+
+            xSemaphoreGive(xMutex);
 
             updateByButtonStatus = STATUS_DEAD;
-            Serial.println("- DEAD QR CODE inside");
+            Logger.log("TASK_BY_BUTTON: DEAD executed");
             vTaskDelete(UpdateByButtonTask);
         }
-
-        vTaskDelay(pdMS_TO_TICKS(50));
+        delay(50);
         if (updateByTimerStatus == STATUS_DEAD) {
-            Serial.println("- DEAD QR CODE outside");
+            Logger.log("TASK_BY_BUTTON: DEAD");
             updateByButtonStatus = STATUS_DEAD;
             vTaskDelete(UpdateByButtonTask);
         }
     }
 }
 
-void printEnvData(EnvData envData) {
-    xSemaphoreTake(xMutex, portMAX_DELAY);
-    display.clear();
+/* Print environmental data with frame on top of screen */
+void printEnvData() {
+    display.drawXBitmap(0, 0, ENV_DATA_BG_WIDTH, ENV_DATA_BG_HEIGHT,
+                        envDataBackground);
 
-    display.drawString(5, 10, timeData.getDate());
-    display.drawString(130, 10, timeData.getTime());
-    display.drawString(230, 10, Battery::toString());
+    (device->errorsData->gps == GPS_OK)
+        ? display.drawStringHCentered(0, timeDataHandler.getDate(),
+                                      Cousine_Bold_16)
+        : display.drawStringHCentered(0, DATA_STRING, Cousine_Bold_16);
 
-    display.drawString(5, 40,
-                       "Temperatura: " + String(envData.temperature) + "°C");
-    display.drawString(150, 40, "Umidità: " + String(envData.humidity) + "%");
-    display.drawString(5, 70,
-                       "Qualità aria: " + String(envData.airQuality) + "%");
+    display.drawString(12, 30,
+                       TEMPERATURE_STRING +
+                           String(device->lastEnvData->temperature) +
+                           TEMPERATURE_SYMBOL_STRING);
+    display.drawString(167, 30,
+                       AIR_QUALITY_STRING +
+                           String(device->lastEnvData->airQuality) +
+                           PERCENTAGE_SYMBOL_STRING);
+    display.drawString(12, 60,
+                       HUMIDITY_STRING + String(device->lastEnvData->humidity) +
+                           PERCENTAGE_SYMBOL_STRING);
     display.drawString(
-        135, 70,
-        "Pressione:" + String((float)envData.pressure / 10, 1) + " hPa");
-
-    display.paint();
-    xSemaphoreGive(xMutex);
+        130, 60,
+        PRESSURE_STRING + String((float)device->lastEnvData->pressure / 10, 1) +
+            PRESSURE_SYMBOL_STRING);
 }
 
-// Loop functionn never used
+/* Print qr code frame */
+void printQrBackground() {
+    display.drawXBitmap(0, 100, QR_BG_WIDTH, QR_BG_HEIGHT, qrBackground);
+    display.drawStringHCentered(200, PRESS_BUTTON_STRING, Cousine_Bold_16);
+    display.drawStringHCentered(220, GENERATE_STRING, Cousine_Bold_16);
+    display.drawStringHCentered(240, QR_CODE_STRING, Cousine_Bold_16);
+    display.drawXBitmap((SCREEN_WIDTH - ARROW_DOWN_WIDTH) / 2, 300,
+                        ARROW_DOWN_WIDTH, ARROW_DOWN_HEIGHT, arrowDown);
+}
+
+// Loop function never used
 void loop() {}

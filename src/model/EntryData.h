@@ -2,7 +2,7 @@
 #define __ENTRY_DATA__
 
 #include "Arduino.h"
-#include "EnvData.h"
+#include "EnvironmentalData.h"
 #include "utility/Logger.h"
 
 /* Entry data class definition */
@@ -18,9 +18,9 @@ class EntryData {
      * @param envData : Environmental data
      * @param timestamp : Timestamp
      */
-    EntryData(EnvData envData, int64_t timestamp);
+    EntryData(EnvironmentalData envData, int64_t timestamp);
 
-    EnvData envData;
+    EnvironmentalData envData;
     int64_t timestamp;
 
     /**
@@ -30,7 +30,7 @@ class EntryData {
     String toString();
 
     /**
-     * @brief Function for debug entry data
+     * @brief Function to debug entry data
      */
     void log();
 

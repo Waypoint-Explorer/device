@@ -24,7 +24,7 @@ class Position {
     String toString();
 
     /**
-     * @brief Function for debug position
+     * @brief Function to debug position
      */
     void log();
 

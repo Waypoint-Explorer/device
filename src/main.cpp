@@ -74,7 +74,7 @@ void setup() {
             if (btnReset.checkPress() == LONG_PRESS) {
                 Logger.log("• DEVICE RESET");
                 display.clear();
-                display.drawStringHCentered(5, "! RESET !", Cousine_Bold_21);
+                display.drawStringHCentered(5, RESET_STRING, Cousine_Bold_21);
                 display.paint();
                 // Reset device
                 device->init = false;
@@ -87,7 +87,7 @@ void setup() {
         }
 
         display.clear();
-        display.drawStringHCentered(5, ".:: SETUP ::.", Cousine_Bold_21);
+        display.drawStringHCentered(5, SETUP_STRING, Cousine_Bold_21);
         display.paint();
 
         // Check if already initialized
@@ -104,13 +104,13 @@ void setup() {
                 DeviceDataHandler::initEnvDataJsonArray();
 
             display.clear();
-            display.drawStringHCentered(5, ".:: INIT ::.", Cousine_Bold_21);
-            display.drawStringHCentered(40, "Id: " + device->id,
+            display.drawStringHCentered(5, INIT_STRING, Cousine_Bold_21);
+            display.drawStringHCentered(40, ID_STRING + device->id,
                                         Cousine_Bold_16);
             display.paint();
         }
 
-        display.drawString(20, 70, "DATI DAL GPS.......", Cousine_Bold_18);
+        display.drawString(20, 70, GET_GPS_STRING, Cousine_Bold_18);
         display.paint();
 
         // Create calibrate sensor task
@@ -124,19 +124,17 @@ void setup() {
             gps.getGpsData(timeDataHandler, device->position);
 
         if (device->errorsData->gps == GPS_OK) {
-            display.drawString(230, 70, "FATTO", Cousine_Bold_18);
+            display.drawString(230, 70, DONE_GPS_STRING, Cousine_Bold_18);
             display.drawStringHCentered(
-                90,
-                "Latitudine: " + String((float)device->position->latitude, 6),
+                90, LAT_STRING + String((float)device->position->latitude, 6),
                 Cousine_Bold_16);
             display.drawStringHCentered(
-                110,
-                "Longitudine: " + String((float)device->position->longitude, 6),
+                110, LON_STRING + String((float)device->position->longitude, 6),
                 Cousine_Bold_16);
             device->storePositionToPreferences();
             firstTimeGps = true;
         } else {
-            display.drawString(230, 70, "ERRORE", Cousine_Bold_18);
+            display.drawString(230, 70, ERROR_GPS_STRING, Cousine_Bold_18);
             firstTimeGps = false;
         }
 
@@ -149,7 +147,7 @@ void setup() {
         while (calibrateSensorStatus == STATUS_ALIVE) {
         }
 
-        display.drawStringHCentered(140, ".:: FINE ::.", Cousine_Bold_21);
+        display.drawStringHCentered(140, DONE_SETUP_STRING, Cousine_Bold_21);
         display.paint();
 
         display.clear();
@@ -211,7 +209,7 @@ void setup() {
 
 /* Function called by CalibrateSensorTask to calibrate sensor */
 void calibrateSensor(void* parameter) {
-    Serial.println("TASK_CALIBRATION_SENSOR: BORN");
+    Logger.log("TASK_CALIBRATION_SENSOR: BORN");
     calibrateSensorStatus = STATUS_ALIVE;
 
     *device->lastEnvData =
@@ -276,7 +274,7 @@ void updateByTimer(void* parameter) {
 
         delay(50);
         if (updateByButtonStatus == STATUS_DEAD) {
-            Serial.println("TASK_BY_TIMER: DEAD");
+            Logger.log("TASK_BY_TIMER: DEAD");
             updateByTimerStatus = STATUS_DEAD;
             vTaskDelete(UpdateByTimerTask);
         }
@@ -285,12 +283,12 @@ void updateByTimer(void* parameter) {
 
 /* Function called by UpdateByButtonTask to generate QR code */
 void updateByButton(void* parameter) {
-    Serial.println("TASK_BY_BUTTON: BORN");
+    Logger.log("TASK_BY_BUTTON: BORN");
     updateByButtonStatus = STATUS_ALIVE;
     while (1) {
         if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0 ||
             btnUpdate.checkPress() == SHORT_PRESS) {
-            Serial.println("TASK_BY_BUTTON: GENERATE QR");
+            Logger.log("TASK_BY_BUTTON: GENERATE QR");
 
             xSemaphoreTake(xMutex, portMAX_DELAY);
             LinkedList<EntryData>* entrydataList = new LinkedList<EntryData>;
@@ -341,28 +339,31 @@ void printEnvData() {
     (device->errorsData->gps == GPS_OK)
         ? display.drawStringHCentered(0, timeDataHandler.getDate(),
                                       Cousine_Bold_16)
-        : display.drawStringHCentered(0, "DATI", Cousine_Bold_16);
+        : display.drawStringHCentered(0, DATA_STRING, Cousine_Bold_16);
 
-    display.drawString(
-        12, 30,
-        "Temperatura: " + String(device->lastEnvData->temperature) + "°C");
-    display.drawString(
-        167, 30,
-        "Qualità aria: " + String(device->lastEnvData->airQuality) + "%");
-    display.drawString(
-        12, 60, "Umidità: " + String(device->lastEnvData->humidity) + "%");
+    display.drawString(12, 30,
+                       TEMPERATURE_STRING +
+                           String(device->lastEnvData->temperature) +
+                           TEMPERATURE_SYMBOL_STRING);
+    display.drawString(167, 30,
+                       AIR_QUALITY_STRING +
+                           String(device->lastEnvData->airQuality) +
+                           PERCENTAGE_SYMBOL_STRING);
+    display.drawString(12, 60,
+                       HUMIDITY_STRING + String(device->lastEnvData->humidity) +
+                           PERCENTAGE_SYMBOL_STRING);
     display.drawString(
         130, 60,
-        "Pressione:" + String((float)device->lastEnvData->pressure / 10, 1) +
-            " hPa");
+        PRESSURE_STRING + String((float)device->lastEnvData->pressure / 10, 1) +
+            PRESSURE_SYMBOL_STRING);
 }
 
 /* Print qr code frame */
 void printQrBackground() {
     display.drawXBitmap(0, 100, QR_BG_WIDTH, QR_BG_HEIGHT, qrBackground);
-    display.drawStringHCentered(200, "PREMERE IL PULSANTE", Cousine_Bold_16);
-    display.drawStringHCentered(220, "PER GENERARE", Cousine_Bold_16);
-    display.drawStringHCentered(240, "IL CODICE QR", Cousine_Bold_16);
+    display.drawStringHCentered(200, PRESS_BUTTON_STRING, Cousine_Bold_16);
+    display.drawStringHCentered(220, GENERATE_STRING, Cousine_Bold_16);
+    display.drawStringHCentered(240, QR_CODE_STRING, Cousine_Bold_16);
     display.drawXBitmap((SCREEN_WIDTH - ARROW_DOWN_WIDTH) / 2, 300,
                         ARROW_DOWN_WIDTH, ARROW_DOWN_HEIGHT, arrowDown);
 }

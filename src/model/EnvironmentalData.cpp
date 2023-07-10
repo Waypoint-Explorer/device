@@ -1,6 +1,6 @@
-#include "EnvData.h"
+#include "EnvironmentalData.h"
 
-EnvData::EnvData() {
+EnvironmentalData::EnvironmentalData() {
     temperature = 0;
     humidity = 0;
     pressure = 0;
@@ -8,7 +8,7 @@ EnvData::EnvData() {
     gasResistance = 0;
 }
 
-String EnvData::toString() {
+String EnvironmentalData::toString() {
     return StringFormatter::formatNumberToStringWithSign(
                temperature, TEMPERATURE_LENGTH, true) +
            StringFormatter::formatNumberToStringWithSign(pressure,
@@ -19,7 +19,7 @@ String EnvData::toString() {
                                                          AIR_QUALITY_LENGTH);
 }
 
-void EnvData::log() {
+void EnvironmentalData::log() {
     Logger.log("Enviromental Data: T " + String(temperature) + " C° | P " +
                String(pressure) + " hPA | H " + String(humidity) + " % | AQ " +
                String(airQuality) + " % | GR " + String(gasResistance) +

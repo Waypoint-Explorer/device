@@ -50,8 +50,8 @@ SensorError EnvSensor::begin() {
     return SENSOR_OK;
 }
 
-EnvData EnvSensor::getEnvData() {
-    EnvData envData = EnvData();
+EnvironmentalData EnvSensor::getEnvData() {
+    EnvironmentalData envData = EnvironmentalData();
     if (sensor.run()) {
         envData.temperature = sensor.rawTemperature;
         envData.humidity = sensor.rawHumidity - HUMIDITY_CORRECTION;
@@ -100,8 +100,6 @@ float EnvSensor::getHumidityScore(float humidity) {
                              0.416666);
         }
     }
-
-    // Logger.log(String(humidityScore));
     return humidityScore;
 }
 
@@ -127,7 +125,7 @@ int16_t EnvSensor::getAirQulity(float humidity, float gasResistance) {
 
 int16_t EnvSensor::formatPressure(float pressure) { return (int)pressure / 10; }
 
-EnvData EnvSensor::getCalibratedEnvData(int16_t cycles) {
+EnvironmentalData EnvSensor::getCalibratedEnvData(int16_t cycles) {
     Logger.log("START CALIBRATION!");
     int16_t count = 0;
     while (count < cycles) {

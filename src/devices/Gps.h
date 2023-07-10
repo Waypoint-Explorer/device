@@ -42,7 +42,8 @@ class Gps {
      * @param position        : Position coordinates
      * @return GpsError in case of error
      */
-    GpsError getGpsData(TimeDataHandler timeDataHandler, Position* position = NULL);
+    GpsError getGpsData(TimeDataHandler timeDataHandler,
+                        Position* position = NULL);
 
     /**
      * @brief Function to power off modem

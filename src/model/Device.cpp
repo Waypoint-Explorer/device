@@ -3,7 +3,7 @@
 Device::Device() {
     position = new Position(0, 0);
     errorsData = new ErrorsData();
-    lastEnvData = new EnvData();
+    lastEnvData = new EnvironmentalData();
     preferences.begin("device");
 }
 

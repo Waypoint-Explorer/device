@@ -1,5 +1,5 @@
-#ifndef __ENV_DATA__
-#define __ENV_DATA__
+#ifndef __ENVIRONMENTAL_DATA__
+#define __ENVIRONMENTAL_DATA__
 
 #include "Arduino.h"
 #include "utility/Logger.h"
@@ -11,12 +11,12 @@
 #define AIR_QUALITY_LENGTH 2
 
 /* Environmental Data class definition */
-class EnvData {
+class EnvironmentalData {
    public:
     /**
      * @brief Contstructor to initialize enviromental data
      */
-    EnvData();
+    EnvironmentalData();
 
     int8_t temperature;     /* Temperature value as °C*/
     uint8_t humidity;       /* Humidity value as percentage */

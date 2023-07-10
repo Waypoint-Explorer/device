@@ -39,8 +39,8 @@ class QrCodeHandler {
      * @param pixel   : Dimension of single rectangle
      */
     static void displayQrCode(uint8_t qr[qrcodegen_BUFFER_LEN_MAX],
-                              Display display, int offsetX,
-                              int offsetY, int pixel = 2);
+                              Display display, int offsetX, int offsetY,
+                              int pixel = 2);
 
     /**
      * @brief Function that generates the string for QR code from data stored in

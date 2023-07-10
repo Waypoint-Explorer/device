@@ -2,11 +2,11 @@
 #define __DEVICE__
 
 #include "Arduino.h"
-#include "EnvData.h"
+#include "EnvironmentalData.h"
+#include "ErrorsData.h"
 #include "Position.h"
 #include "Preferences.h"
 #include "typedata.h"
-#include "ErrorsData.h"
 #include "utility/IdentifierGenerator.h"
 
 /* Device class definition */
@@ -35,7 +35,7 @@ class Device {
     ErrorsData* errorsData;
 
     /* Last environmental data measured */
-    EnvData* lastEnvData;
+    EnvironmentalData* lastEnvData;
 
     /**
      * @brief Function that end preferences

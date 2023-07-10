@@ -4,7 +4,7 @@
 #include "Arduino.h"
 #include "bsec.h"
 #include "errors.h"
-#include "model/EnvData.h"
+#include "model/EnvironmentalData.h"
 #include "utility/Logger.h"
 
 #define HUMIDITY_WEIGHT 0.25
@@ -20,6 +20,7 @@
 /* Environmental Sensor class definition */
 class EnvSensor {
    public:
+    /* Bosch sensor */
     Bsec sensor;
 
     /**
@@ -31,13 +32,13 @@ class EnvSensor {
      * @brief Get environmental data from sensor
      * @return environmental data object
      */
-    EnvData getEnvData();
+    EnvironmentalData getEnvData();
 
     /**
      * @brief Function to get calibrated data from sensor
      * @param cycles : Cycles of calibration
      */
-    EnvData getCalibratedEnvData(int16_t cycles);
+    EnvironmentalData getCalibratedEnvData(int16_t cycles);
 
    private:
     /**

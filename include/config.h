@@ -42,17 +42,26 @@
 // Task settings
 #define CORE_0 0
 #define CORE_1 1
+
+#define CALIBRATE_SENSOR_TASK_WORDS 10000
+#define CALIBRATE_SENSOR_TASK_PRIORITY 5
+
 #define UPDATE_BY_TIMER_TASK_WORDS 10000
 #define UPDATE_BY_TIMER_TASK_PRIORITY 10
 
 #define UPDATE_BY_BUTTON_TASK_WORDS 10000
 #define UPDATE_BY_BUTTON_TASK_PRIORITY 9
 
+// Display setting
 #define DISPLAY_ROTATION 1
 
+// Gps setting
 #define GET_GPS_DATA_COUNT 24
-#define SENSOR_CALIBRATION_CYCLES 2
 
-#define QR_CODE_DISPLAY_TIME 10000
+// Sensor setting
+#define SENSOR_CALIBRATION_CYCLES 10
+
+// QrCode setting
+#define QR_CODE_DISPLAY_TIME 10000 // millis
 
 #endif

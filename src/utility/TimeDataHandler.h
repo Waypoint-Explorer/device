@@ -1,5 +1,5 @@
-#ifndef __TIME_DATA__
-#define __TIME_DATA__
+#ifndef __TIME_DATA_HANDLER__
+#define __TIME_DATA_HANDLER__
 
 #include "Arduino.h"
 #include "ESP32Time.h"
@@ -8,12 +8,12 @@
 #define TIME_OFFSET 0
 
 /* Time Data class definition */
-class TimeData {
+class TimeDataHandler {
    public:
     /**
-     * @brief Constructor for time data
+     * @brief Constructor for time data handler
      */
-    TimeData();
+    TimeDataHandler();
 
     /**
      * @brief Function to set the internal RTC time
@@ -24,7 +24,8 @@ class TimeData {
      * @param  month : month (1-12)
      * @param  year  : year ie 2021
      */
-    void setTimeDate(int sec, int min, int hour, int day, int month, int year);
+    void setTimeDate(int16_t sec, int16_t min, int16_t hour, int16_t day,
+                     int16_t month, int16_t year);
 
     /**
      * @brief Function that return date as string
@@ -57,13 +58,19 @@ class TimeData {
     void setOffset(uint32_t offset = TIME_OFFSET);
 
     /**
+     * @brief Function that return sleep time in seconds (hour by hour)
+     * @return Seconds to sleep
+     */
+    int64_t getSleepTimeInSeconds();
+
+    /**
      * @brief Function to get time data as string
      * @return String timestamp
      */
     String toString();
 
     /**
-     * @brief Function for debug timestamp
+     * @brief Function to debug timestamp
      */
     void log();
 

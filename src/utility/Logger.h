@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 
-/* Logger Service class definition*/
+/* Logger Service class definition */
 class LoggerService {
    public:
     /**

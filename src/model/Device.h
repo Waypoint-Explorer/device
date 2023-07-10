@@ -2,11 +2,12 @@
 #define __DEVICE__
 
 #include "Arduino.h"
+#include "EnvironmentalData.h"
+#include "ErrorsData.h"
 #include "Position.h"
-#include "utility/ErrorsHandler.h"
+#include "Preferences.h"
+#include "typedata.h"
 #include "utility/IdentifierGenerator.h"
-
-#define MAX_ENVDATA_ENTRIES 1000
 
 /* Device class definition */
 class Device {
@@ -24,18 +25,85 @@ class Device {
     /* Unique id as string*/
     String id;
 
+    /* Init state */
+    bool init;
+
     /* Position as latitude and longitude */
     Position* position;
 
     /* Error handler */
-    ErrorsHandler* errorsHandler;
+    ErrorsData* errorsData;
+
+    /* Last environmental data measured */
+    EnvironmentalData* lastEnvData;
 
     /**
-     * @brief Function for debug device
+     * @brief Function that end preferences
+     */
+    void endPreferences();
+
+    /**
+     * @brief Function that store init state to preferences
+     */
+    void storeInitToPreferences();
+
+    /**
+     * @brief Function that store Id to preferences
+     */
+    void storeIdToPreferences();
+
+    /**
+     * @brief Function that store position to preferences
+     */
+    void storePositionToPreferences();
+
+    /**
+     * @brief Function that store last environmental data to RTC memory
+     * @param lastEnvDataRTC : Last environmental data struct RTC
+     */
+    void storeLastEnvDataToRTC(EnvDataStruct* lastEnvDataRTC);
+
+    /**
+     * @brief Function that store errors to RTC memory
+     * @param errorsRTC : Errors struct RTC
+     */
+    void storeErrorsToRTC(ErrorsStruct* errorsRTC);
+
+    /**
+     * @brief Function that retrieve init state from preferences
+     */
+    void retrieveInitFromPreferences();
+
+    /**
+     * @brief Function that retrieve Id from preferences
+     */
+    void retrieveIdFromPreferences();
+
+    /**
+     * @brief Function that retrieve position from preferences
+     */
+    void retrievePositionFromPreferences();
+
+    /**
+     * @brief Function that retrieve last environmental data from RTC memory
+     * @param lastEnvDataRTC : Last environmental data struct RTC
+     */
+    void retrieveEnvDataFromRTC(EnvDataStruct* lastEnvDataRTC);
+
+    /**
+     * @brief Function that retrieve errors from RTC memory
+     * @param errorsRTC : Errors struct RTC
+     */
+    void retrieveErrorsFromRTC(ErrorsStruct* errorsRTC);
+
+    /**
+     * @brief Function to debug device
      */
     void log();
 
    private:
+    /* Preferences to store data to flash */
+    Preferences preferences;
 };
 
 #endif

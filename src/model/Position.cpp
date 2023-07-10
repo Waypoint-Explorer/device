@@ -5,9 +5,9 @@ Position::Position(float latitude, float longitude) {
     this->longitude = longitude;
 }
 
-String Position::toString() { return String(latitude) + String(longitude); }
+String Position::toString() { return String((float) latitude, 6) + String((float) longitude, 6); }
 
 void Position::log() {
-    Logger.log("Position: Latitude: " + String(latitude) +
-               " | Longitude:  " + String(longitude));
+    Logger.log("Position: Latitude: " + String((float) latitude, 6) +
+               " | Longitude:  " + String((float) longitude, 6));
 }

@@ -50,7 +50,7 @@ void setup() {
     DeviceDataHandler::begin();
 
     Logger.log("• ENV SENSOR");
-    device->errorsHandler->sensor = envSensor.begin();
+    device->errorsData->sensor = envSensor.begin();
 
     Logger.log("• DISPLAY");
     display = Display(DISPLAY_ROTATION);
@@ -95,7 +95,7 @@ void setup() {
             device->storeInitToPreferences();
             device->setup();
             device->storeIdToPreferences();
-            device->errorsHandler->file =
+            device->errorsData->file =
                 DeviceDataHandler::initEnvDataJsonArray();
 
             display.clear();
@@ -116,10 +116,10 @@ void setup() {
 
         Logger.log("• GPS");
         gps.begin();
-        device->errorsHandler->gps =
+        device->errorsData->gps =
             gps.getGpsData(timeDataHandler, device->position);
 
-        (device->errorsHandler->gps == GPS_OK)
+        (device->errorsData->gps == GPS_OK)
             ? display.drawString(230, 100, "DONE", Cousine_Bold_18)
             : display.drawString(230, 100, "ERROR", Cousine_Bold_18);
 
@@ -140,7 +140,7 @@ void setup() {
 
         delay(100);
 
-        Logger.log("• SAVE TO RTC: " + device->errorsHandler->toString());
+        Logger.log("• SAVE TO RTC: " + device->errorsData->toString());
         device->storeErrorsToRTC(&errorsRTC);
         device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
@@ -159,6 +159,7 @@ void setup() {
     device->retrieveIdFromPreferences();
     device->retrievePositionFromPreferences();
 
+    // Get data from RTC
     device->retrieveErrorsFromRTC(&errorsRTC);
     device->retrieveEnvDataFromRTC(&lastEnvDataRTC);
 
@@ -177,6 +178,7 @@ void setup() {
            updateByTimerStatus == STATUS_ALIVE) {
     }
 
+    // Store data to RTC
     device->storeErrorsToRTC(&errorsRTC);
     device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
@@ -213,16 +215,15 @@ void updateByTimer(void* parameter) {
         if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER ||
             timeDataHandler.getSleepTimeInSeconds() == 0) {
             // get gps data every day to update time and date
-            if (device->errorsHandler->gps != GPS_OK) {
-                device->errorsHandler->gps =
+            if (device->errorsData->gps != GPS_OK) {
+                device->errorsData->gps =
                     gps.getGpsData(timeDataHandler, device->position);
                 countGpsRead = 0;
             } else {
                 if (countGpsRead >= GET_GPS_DATA_COUNT) {
                     Logger.log("TASK_BY_TIMER: UPDATE TIME/DATE");
                     gps.begin();
-                    device->errorsHandler->gps =
-                        gps.getGpsData(timeDataHandler);
+                    device->errorsData->gps = gps.getGpsData(timeDataHandler);
                     countGpsRead = 0;
                 } else {
                     countGpsRead++;
@@ -236,7 +237,7 @@ void updateByTimer(void* parameter) {
 
             device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
-            device->errorsHandler->file = DeviceDataHandler::writeLastEnvData(
+            device->errorsData->file = DeviceDataHandler::writeLastEnvData(
                 EntryData(*device->lastEnvData, timeDataHandler.getTimestamp()),
                 device);
 
@@ -272,14 +273,14 @@ void updateByButton(void* parameter) {
 
             xSemaphoreTake(xMutex, portMAX_DELAY);
             LinkedList<EntryData>* entrydataList = new LinkedList<EntryData>;
-            device->errorsHandler->file =
+            device->errorsData->file =
                 DeviceDataHandler::readEnvDataList(entrydataList);
             display.clear();
             printEnvData();
             uint8_t qr[qrcodegen_BUFFER_LEN_MAX];
             String qrText =
                 QrCodeHandler::generateStringForQr(device, *entrydataList);
-            device->errorsHandler->qrCode =
+            device->errorsData->qrCode =
                 QrCodeHandler::generateQrCode(qrText, qr);
             QrCodeHandler::displayQrCode(qr, display, 5, 105);
             display.paint();
@@ -291,7 +292,7 @@ void updateByButton(void* parameter) {
             printQrBackground();
             display.paint();
 
-            device->errorsHandler = new ErrorsHandler();
+            device->errorsData = new ErrorsData();
             device->storeErrorsToRTC(&errorsRTC);
 
             xSemaphoreGive(xMutex);
@@ -334,7 +335,7 @@ void printEnvData() {
 /* Print qr code frame */
 void printQrBackground() {
     display.drawXBitmap(0, 100, QR_BG_WIDTH, QR_BG_HEIGHT, qrBackground);
-    display.drawStringHCentered(200, "PREMI IL PULSANTE", Cousine_Bold_16);
+    display.drawStringHCentered(200, "PREMERE IL PULSANTE", Cousine_Bold_16);
     display.drawStringHCentered(220, "PER GENERARE", Cousine_Bold_16);
     display.drawStringHCentered(240, "IL CODICE QR", Cousine_Bold_16);
 }

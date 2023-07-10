@@ -1,5 +1,5 @@
-#ifndef __TIME_DATA__
-#define __TIME_DATA__
+#ifndef __TIME_DATA_HANDLER__
+#define __TIME_DATA_HANDLER__
 
 #include "Arduino.h"
 #include "ESP32Time.h"

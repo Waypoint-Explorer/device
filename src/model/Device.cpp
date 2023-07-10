@@ -2,7 +2,7 @@
 
 Device::Device() {
     position = new Position(0, 0);
-    errorsHandler = new ErrorsHandler();
+    errorsData = new ErrorsData();
     lastEnvData = new EnvData();
     preferences.begin("device");
 }
@@ -18,7 +18,7 @@ void Device::log() {
     Logger.log("Init: " + init ? "TRUE" : "FALSE");
     Logger.log("ID: " + id);
     position->log();
-    errorsHandler->log();
+    errorsData->log();
     lastEnvData->log();
 }
 
@@ -39,12 +39,12 @@ void Device::storeLastEnvDataToRTC(EnvDataStruct* lastEnvDataRTC) {
 }
 
 void Device::storeErrorsToRTC(ErrorsStruct* errorsRTC) {
-    errorsRTC->battery = errorsHandler->battery;
-    errorsRTC->file = errorsHandler->file;
-    errorsRTC->gps = errorsHandler->gps;
-    errorsRTC->init = errorsHandler->init;
-    errorsRTC->qrCode = errorsHandler->qrCode;
-    errorsRTC->sensor = errorsHandler->sensor;
+    errorsRTC->battery = errorsData->battery;
+    errorsRTC->file = errorsData->file;
+    errorsRTC->gps = errorsData->gps;
+    errorsRTC->init = errorsData->init;
+    errorsRTC->qrCode = errorsData->qrCode;
+    errorsRTC->sensor = errorsData->sensor;
 }
 
 void Device::retrieveInitFromPreferences() {
@@ -66,10 +66,10 @@ void Device::retrieveEnvDataFromRTC(EnvDataStruct* lastEnvDataRTC) {
 }
 
 void Device::retrieveErrorsFromRTC(ErrorsStruct* errorsRTC) {
-    errorsHandler->battery = errorsRTC->battery;
-    errorsHandler->file = errorsRTC->file;
-    errorsHandler->gps = errorsRTC->gps;
-    errorsHandler->init = errorsRTC->init;
-    errorsHandler->qrCode = errorsRTC->qrCode;
-    errorsHandler->sensor = errorsRTC->sensor;
+    errorsData->battery = errorsRTC->battery;
+    errorsData->file = errorsRTC->file;
+    errorsData->gps = errorsRTC->gps;
+    errorsData->init = errorsRTC->init;
+    errorsData->qrCode = errorsRTC->qrCode;
+    errorsData->sensor = errorsRTC->sensor;
 }

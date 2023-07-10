@@ -46,5 +46,5 @@ String QrCodeHandler::generateStringForQr(Device* device,
     }
 
     return device->id + IdentifierGenerator::generateUniqueNumberId(32) +
-           device->errorsHandler->toString() + data;
+           device->errorsData->toString() + data;
 }

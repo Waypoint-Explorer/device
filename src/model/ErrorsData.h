@@ -1,17 +1,17 @@
-#ifndef __ERRORS_HANLDER__
-#define __ERRORS_HANDLER__
+#ifndef __ERRORS_DATA__
+#define __ERRORS_DATA__
 
 #include "Arduino.h"
 #include "errors.h"
 #include "utility/Logger.h"
 
-/* Errors Handler class definition */
-class ErrorsHandler {
+/* Errors data class definition */
+class ErrorsData {
    public:
     /**
      * @brief Constructor to initialize everything to OK
      */
-    ErrorsHandler();
+    ErrorsData();
 
     /**
      * @brief Constructor to initialize errors with values
@@ -22,7 +22,7 @@ class ErrorsHandler {
      * @param qrCode  : QR code error
      * @param sensor  : Sensor error
      */
-    ErrorsHandler(uint8_t battery, uint8_t init, uint8_t file, uint8_t gps, uint8_t qrCode,
+    ErrorsData(uint8_t battery, uint8_t init, uint8_t file, uint8_t gps, uint8_t qrCode,
                   uint8_t sensor);
 
     uint8_t battery;

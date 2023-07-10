@@ -6,7 +6,7 @@
 #include "Position.h"
 #include "Preferences.h"
 #include "typedata.h"
-#include "utility/ErrorsHandler.h"
+#include "ErrorsData.h"
 #include "utility/IdentifierGenerator.h"
 
 /* Device class definition */
@@ -32,7 +32,7 @@ class Device {
     Position* position;
 
     /* Error handler */
-    ErrorsHandler* errorsHandler;
+    ErrorsData* errorsData;
 
     /* Last environmental data measured */
     EnvData* lastEnvData;

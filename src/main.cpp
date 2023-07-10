@@ -10,6 +10,9 @@ Display display;
 Button btnReset(RESET_BUTTON, TIME_LONGPRESS_RESET);
 Button btnUpdate(UPDATE_BUTTON);
 
+TaskHandle_t CalibrateSensorTask;
+static volatile uint8_t calibrateSensorStatus = STATUS_DEAD;
+
 TaskHandle_t UpdateByTimerTask;
 static volatile uint8_t updateByTimerStatus = STATUS_DEAD;
 
@@ -23,6 +26,7 @@ RTC_DATA_ATTR uint8_t countGpsRead = 0;
 RTC_DATA_ATTR struct EnvDataStruct lastEnvDataRTC;
 RTC_DATA_ATTR struct ErrorsStruct errorsRTC;
 
+void calibrateSensor(void* parameter);
 void updateByTimer(void* parameter);
 void updateByButton(void* parameter);
 void printEnvData();
@@ -55,6 +59,7 @@ void setup() {
 
     updateByTimerStatus = STATUS_DEAD;
     updateByButtonStatus = STATUS_DEAD;
+    calibrateSensorStatus = STATUS_DEAD;
 
     /////////////// INIT DEVICE IF FIRST TIME /////////////////////
     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED) {
@@ -103,9 +108,16 @@ void setup() {
 
         display.drawString(20, 100, "GET GPS DATA.....", Cousine_Bold_18);
         display.paint();
+
+        // Create calibrate sensor task
+        xTaskCreatePinnedToCore(
+            calibrateSensor, "calibrateSensorTask", CALIBRATE_SENSOR_TASK_WORDS,
+            NULL, CALIBRATE_SENSOR_TASK_PRIORITY, &CalibrateSensorTask, CORE_0);
+
         Logger.log("• GPS");
         gps.begin();
-        device->errorsHandler->gps = gps.getGpsData(timeDataHandler, device->position);
+        device->errorsHandler->gps =
+            gps.getGpsData(timeDataHandler, device->position);
 
         (device->errorsHandler->gps == GPS_OK)
             ? display.drawString(230, 100, "DONE", Cousine_Bold_18)
@@ -113,11 +125,15 @@ void setup() {
 
         device->storePositionToPreferences();
 
+        // Wait task to finish
+        delay(100);
+        while (calibrateSensorStatus == STATUS_ALIVE) {
+        }
+
         display.drawStringHCentered(140, ".:: SETUP DONE ::.", Cousine_Bold_21);
         display.paint();
 
         display.clear();
-        *device->lastEnvData = envSensor.getCalibratedEnvData(10);
         printEnvData();
         printQrBackground();
         display.paint();
@@ -164,19 +180,32 @@ void setup() {
     device->storeErrorsToRTC(&errorsRTC);
     device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
+    gps.modemPowerOff();
+    device->endPreferences();
+
     esp_sleep_enable_timer_wakeup(timeDataHandler.getSleepTimeInSeconds() *
                                   uS_TO_S_FACTOR);
     Logger.log("• SLEEP REMAINING: " +
                String(timeDataHandler.getSleepTimeInSeconds()));
 
-    gps.modemPowerOff();
-    device->endPreferences();
-
     Logger.log(".:: SLEEP Device ::.");
     esp_deep_sleep_start();
 }
 
-// Function called by UpdateByTimerTask to update environmental data every hour
+/* Function called by CalibrateSensorTask to calibrate sensor */
+void calibrateSensor(void* parameter) {
+    Serial.println("TASK_CALIBRATION_SENSOR: BORN");
+    calibrateSensorStatus = STATUS_ALIVE;
+
+    *device->lastEnvData =
+        envSensor.getCalibratedEnvData(SENSOR_CALIBRATION_CYCLES);
+
+    Logger.log("TASK_CALIBRATION_SENSOR: DEAD");
+    calibrateSensorStatus = STATUS_DEAD;
+    vTaskDelete(UpdateByButtonTask);
+}
+
+/* Function called by UpdateByTimerTask to update environmental data hourly */
 void updateByTimer(void* parameter) {
     Logger.log("TASK_BY_TIMER: BORN");
     updateByTimerStatus = STATUS_ALIVE;
@@ -192,7 +221,8 @@ void updateByTimer(void* parameter) {
                 if (countGpsRead >= GET_GPS_DATA_COUNT) {
                     Logger.log("TASK_BY_TIMER: UPDATE TIME/DATE");
                     gps.begin();
-                    device->errorsHandler->gps = gps.getGpsData(timeDataHandler);
+                    device->errorsHandler->gps =
+                        gps.getGpsData(timeDataHandler);
                     countGpsRead = 0;
                 } else {
                     countGpsRead++;
@@ -280,7 +310,7 @@ void updateByButton(void* parameter) {
     }
 }
 
-/* Print environmental data on top of screen */
+/* Print environmental data with frame on top of screen */
 void printEnvData() {
     display.drawXBitmap(0, 0, ENV_DATA_BG_WIDTH, ENV_DATA_BG_HEIGHT,
                         envDataBackground);
@@ -301,6 +331,7 @@ void printEnvData() {
             " hPa");
 }
 
+/* Print qr code frame */
 void printQrBackground() {
     display.drawXBitmap(0, 100, QR_BG_WIDTH, QR_BG_HEIGHT, qrBackground);
     display.drawStringHCentered(200, "PREMI IL PULSANTE", Cousine_Bold_16);

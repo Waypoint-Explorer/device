@@ -12,7 +12,7 @@ class IdentifierGenerator {
     * @param idLength : Length of the id
     * @return id as a string of numbers
    */
-    static String generateUniqueNumberId(byte idLength);
+    static String generateUniqueNumberId(uint8_t idLength);
 };
 
 #endif

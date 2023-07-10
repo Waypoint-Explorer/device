@@ -76,8 +76,6 @@ FileError DeviceDataHandler::readEnvDataList(LinkedList<EntryData>* entryDataLis
             entryData.envData.pressure = elem[PRESSURE_LABEL].as<int>();
             entryData.envData.airQuality = elem[AIR_QUALITY_LABEL].as<int>();
             entryDataList->add(entryData);
-
-            //entryData.log();
         }
 
     } else {

@@ -9,8 +9,8 @@ ErrorsHandler::ErrorsHandler() {
     sensor = SENSOR_OK;
 }
 
-ErrorsHandler::ErrorsHandler(byte battery, byte init, byte file, byte gps,
-                             byte qrCode, byte sensor) {
+ErrorsHandler::ErrorsHandler(uint8_t battery, uint8_t init, uint8_t file,
+                             uint8_t gps, uint8_t qrCode, uint8_t sensor) {
     this->battery = battery;
     this->init = init;
     this->file = file;

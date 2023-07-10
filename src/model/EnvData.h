@@ -31,19 +31,11 @@ class EnvData {
     String toString();
 
     /**
-     * @brief Function for debug data
+     * @brief Function to debug data
      */
     void log();
 
    private:
-    /**
-     * @brief Function that format two digits number as string and add sign as 1
-     * (positive) and 0 (negative) at begin
-     * @param sign  : If the sign is needed
-     * @param value : Value to convert in string
-     * @return String of the data
-     */
-    String formatData(bool sign, int value);
 };
 
 #endif

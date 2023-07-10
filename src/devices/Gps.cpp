@@ -22,7 +22,7 @@ GpsError Gps::begin() {
     return GPS_OK;
 }
 
-GpsError Gps::getGpsData(TimeData timeData, Position* position) {
+GpsError Gps::getGpsData(TimeDataHandler timeDataHandler, Position* position) {
     Logger.log("GET GPS DATA");
 
     modemPowerOn();
@@ -47,7 +47,7 @@ GpsError Gps::getGpsData(TimeData timeData, Position* position) {
                            " | Altitude: " + String(alt) + " | View Sat: " +
                            String(viewsat) + " | Used Sat: " + String(usedsat));
             }
-            timeData.setTimeDate(sec, min, hour, day, month, year);
+            timeDataHandler.setTimeDate(sec, min, hour, day, month, year);
             break;
         }
         delay(DELAY_MILLIS);
@@ -55,7 +55,8 @@ GpsError Gps::getGpsData(TimeData timeData, Position* position) {
 
     if (counter > MAX_CYCLE_GPS) gpsError = GPS_CANT_LOCATE;
 
-    Logger.log("Time & Date: " + timeData.getDate() + " " + timeData.getTime());
+    Logger.log("Time & Date: " + timeDataHandler.getDate() + " " +
+               timeDataHandler.getTime());
 
     if (!disableGPS()) gpsError = GPS_CANT_DISABLE;
 
@@ -93,9 +94,7 @@ void Gps::modemPowerOn() {
     digitalWrite(PWR_PIN, LOW);
 }
 
-void Gps::modemPowerOff() {
-    modem.poweroff();
-}
+void Gps::modemPowerOff() { modem.poweroff(); }
 
 void Gps::modemRestart() {
     modemPowerOff();

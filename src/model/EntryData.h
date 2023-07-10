@@ -30,7 +30,7 @@ class EntryData {
     String toString();
 
     /**
-     * @brief Function for debug entry data
+     * @brief Function to debug entry data
      */
     void log();
 

@@ -22,15 +22,15 @@ class ErrorsHandler {
      * @param qrCode  : QR code error
      * @param sensor  : Sensor error
      */
-    ErrorsHandler(byte battery, byte init, byte file, byte gps, byte qrCode,
-                  byte sensor);
+    ErrorsHandler(uint8_t battery, uint8_t init, uint8_t file, uint8_t gps, uint8_t qrCode,
+                  uint8_t sensor);
 
-    byte battery;
-    byte init;
-    byte file;
-    byte gps;
-    byte qrCode;
-    byte sensor;
+    uint8_t battery;
+    uint8_t init;
+    uint8_t file;
+    uint8_t gps;
+    uint8_t qrCode;
+    uint8_t sensor;
 
     /**
      * @brief Function to get all errors as a single string of numbers

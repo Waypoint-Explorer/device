@@ -97,7 +97,7 @@ class Device {
     void retrieveErrorsFromRTC(ErrorsStruct* errorsRTC);
 
     /**
-     * @brief Function for debug device
+     * @brief Function to debug device
      */
     void log();
 

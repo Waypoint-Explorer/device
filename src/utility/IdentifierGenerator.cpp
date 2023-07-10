@@ -1,8 +1,8 @@
 #include "IdentifierGenerator.h"
 
-String IdentifierGenerator::generateUniqueNumberId(byte idLength) {
+String IdentifierGenerator::generateUniqueNumberId(uint8_t idLength) {
     String id = "";
-    for (int i = 0; i < idLength ; i++) {
+    for (int16_t i = 0; i < idLength ; i++) {
         id += ESPTrueRandom.random(10);
     }
 

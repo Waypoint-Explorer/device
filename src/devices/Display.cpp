@@ -6,20 +6,22 @@ MiniGrafx gfx = MiniGrafx(&epd, BITS_PER_PIXEL, palette);
 
 Display::Display() {}
 
-Display::Display(int rotation) {
+Display::Display(int16_t rotation) {
     gfx.init();
     gfx.setRotation(rotation);
     gfx.fillBuffer(EPD_WHITE);
 }
 
-void Display::drawString(int xPos, int yPos, String str, const char *fontData) {
+void Display::drawString(int16_t xPos, int16_t yPos, String str,
+                         const char *fontData) {
     gfx.setFont(fontData);
     gfx.drawString(xPos, yPos, str);
 }
 
-void Display::drawStringHCentered(int yPos, String str, const char *fontData) {
+void Display::drawStringHCentered(int16_t yPos, String str,
+                                  const char *fontData) {
     gfx.setFont(fontData);
-    int xPos =
+    int16_t xPos =
         (SCREEN_WIDTH - gfx.getStringWidth(str.c_str(), str.length())) / 2;
     gfx.drawString(xPos, yPos, str);
 }
@@ -28,13 +30,14 @@ void Display::paint() { gfx.commit(); }
 
 void Display::clear() { gfx.fillBuffer(1); }
 
-void Display::fillRectangle(int xPos, int yPos, int width, int height) {
+void Display::fillRectangle(int16_t xPos, int16_t yPos, int16_t width,
+                            int16_t height) {
     gfx.fillRect(xPos, yPos, width, height);
 }
 
-void Display::setColor(int color) { gfx.setColor(color); }
+void Display::setColor(int16_t color) { gfx.setColor(color); }
 
-void Display::drawXBitmap(int xPos, int yPos, int width, int height,
-                          const char *bitmap) {
+void Display::drawXBitmap(int16_t xPos, int16_t yPos, int16_t width,
+                          int16_t height, const char *bitmap) {
     gfx.drawXbm(xPos, yPos, width, height, bitmap);
 }

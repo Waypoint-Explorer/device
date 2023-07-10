@@ -2,11 +2,11 @@
 #define __GPS__
 
 #include "Arduino.h"
-#include "TimeData.h"
 #include "Wire.h"
 #include "errors.h"
 #include "model/Position.h"
 #include "utility/Logger.h"
+#include "utility/TimeDataHandler.h"
 
 #define TINY_GSM_MODEM_SIM7000
 #define TINY_GSM_RX_BUFFER 1024  // Set RX buffer to 1Kb
@@ -27,9 +27,6 @@
 #define POWER_OFF_MILLIS 1500
 #define GPS_RESPONSE 10000L
 
-/*#define LAT 44.408836
-#define LON 12.198644*/
-
 /* Gps class definition */
 class Gps {
    public:
@@ -41,12 +38,12 @@ class Gps {
 
     /**
      * @brief Function to initialize gps modem
-     * @param timeData : TimeData for time and date
-     * @param position : Position coordinates
+     * @param timeDataHandler : TimeDataHandler for time and date
+     * @param position        : Position coordinates
      * @return GpsError in case of error
      */
-    GpsError getGpsData(TimeData timeData, Position* position = NULL);
-    
+    GpsError getGpsData(TimeDataHandler timeDataHandler, Position* position = NULL);
+
     /**
      * @brief Function to power off modem
      */

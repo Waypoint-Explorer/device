@@ -61,7 +61,7 @@ EnvData EnvSensor::getEnvData() {
         envData.gasResistance = sensor.gasResistance;
 
         // Debug
-        envData.log();
+        // envData.log();
     }
     return envData;
 }
@@ -119,17 +119,17 @@ float EnvSensor::getGasScore(float gasResistance) {
     return gasScore;
 }
 
-int EnvSensor::getAirQulity(float humidity, float gasResistance) {
+int16_t EnvSensor::getAirQulity(float humidity, float gasResistance) {
     float airQualityScore =
         getHumidityScore(humidity) + getGasScore(gasResistance);
     return airQualityScore * 100;
 }
 
-int EnvSensor::formatPressure(float pressure) { return (int)pressure / 10; }
+int16_t EnvSensor::formatPressure(float pressure) { return (int)pressure / 10; }
 
-EnvData EnvSensor::getCalibratedEnvData(int cycles) {
+EnvData EnvSensor::getCalibratedEnvData(int16_t cycles) {
     Logger.log("START CALIBRATION!");
-    int count = 0;
+    int16_t count = 0;
     while (count < cycles) {
         count++;
         getEnvData();

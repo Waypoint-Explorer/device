@@ -8,12 +8,12 @@
 #define TIME_OFFSET 0
 
 /* Time Data class definition */
-class TimeData {
+class TimeDataHandler {
    public:
     /**
-     * @brief Constructor for time data
+     * @brief Constructor for time data handler
      */
-    TimeData();
+    TimeDataHandler();
 
     /**
      * @brief Function to set the internal RTC time
@@ -24,7 +24,8 @@ class TimeData {
      * @param  month : month (1-12)
      * @param  year  : year ie 2021
      */
-    void setTimeDate(int sec, int min, int hour, int day, int month, int year);
+    void setTimeDate(int16_t sec, int16_t min, int16_t hour, int16_t day,
+                     int16_t month, int16_t year);
 
     /**
      * @brief Function that return date as string
@@ -69,7 +70,7 @@ class TimeData {
     String toString();
 
     /**
-     * @brief Function for debug timestamp
+     * @brief Function to debug timestamp
      */
     void log();
 

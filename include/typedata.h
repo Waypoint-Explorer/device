@@ -6,19 +6,19 @@
 /* Type data structs for RTC */
 
 struct EnvDataStruct {
-    int temperature;
-    byte humidity;
-    int pressure;
-    byte airQuality;
+    int8_t temperature;
+    uint8_t humidity;
+    uint32_t pressure;
+    uint8_t airQuality;
 };
 
 struct ErrorsStruct {
-    byte battery;
-    byte init;
-    byte file;
-    byte gps;
-    byte qrCode;
-    byte sensor;
+    uint8_t battery;
+    uint8_t init;
+    uint8_t file;
+    uint8_t gps;
+    uint8_t qrCode;
+    uint8_t sensor;
 };
 
 #endif

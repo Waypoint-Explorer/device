@@ -37,7 +37,7 @@ class EnvSensor {
      * @brief Function to get calibrated data from sensor
      * @param cycles : Cycles of calibration
      */
-    EnvData getCalibratedEnvData(int cycles);
+    EnvData getCalibratedEnvData(int16_t cycles);
 
    private:
     /**
@@ -66,14 +66,14 @@ class EnvSensor {
      * @param gasResistance : Gas resistance as float
      * @return air quality value as integer
      */
-    int getAirQulity(float humidity, float gasResistance);
+    int16_t getAirQulity(float humidity, float gasResistance);
 
     /**
      * @brief Function to format pressure to 5 digits
      * @param pressure : pressure as float
      * @return pressure formatted as integer
      */
-    int formatPressure(float pressure);
+    int16_t formatPressure(float pressure);
 
     // State of BSEC sensor
     uint8_t bsecState[BSEC_MAX_STATE_BLOB_SIZE] = {

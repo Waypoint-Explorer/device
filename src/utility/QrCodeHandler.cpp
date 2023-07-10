@@ -14,8 +14,8 @@ QrCodeError QrCodeHandler::generateQrCode(String qrText,
 }
 
 void QrCodeHandler::displayQrCode(uint8_t qr[qrcodegen_BUFFER_LEN_MAX],
-                                  Display display, int pixel, int offsetX,
-                                  int offsetY) {
+                                  Display display, int offsetX, int offsetY,
+                                  int pixel) {
     int size = qrcodegen_getSize(qr);
     for (int y = 0; y < size; y++) {
         for (int x = 0; x < size; x++) {
@@ -38,8 +38,9 @@ String QrCodeHandler::generateStringForQr(Device* device,
     data += entryDataList.get(0).timestamp;
     for (int i = 0; i <= entryDataList.size() - 1; i++) {
         data += StringFormatter::formatNumberToStringWithSign(
-            round((double)(entryDataList.get(i).timestamp - entryDataList.get(0).timestamp) /
-                S_TO_HOUR_FACTOR),
+            round((double)(entryDataList.get(i).timestamp -
+                           entryDataList.get(0).timestamp) /
+                  S_TO_HOUR_FACTOR),
             HOUR_COUNT_LENGTH);
         data += entryDataList.get(i).envData.toString();
     }

@@ -32,52 +32,53 @@ class Display {
      * @brief Contstructor to initialize display
      * @param rotation : Rotation of the display
      */
-    Display(int rotation);
+    Display(int16_t rotation);
 
     /**
-     * @brief Function that draw a string with font, in x and y position
+     * @brief Function that draws a string with font, in x and y position
      * @param xPos     : X position
      * @param yPos     : Y position
      * @param str      : String to be written
      * @param fontData : Font to be used
      */
-    void drawString(int xPos, int yPos, String str,
+    void drawString(int16_t xPos, int16_t yPos, String str,
                     const char *fontData = ArialMT_Plain_16);
 
     /**
-     * @brief Function that draw a string with font, horizontally centered and
+     * @brief Function that draws a string with font, horizontally centered and
      * in y position
      * @param yPos     : Y position
      * @param str      : String to be written
      * @param fontData : Font to be used
      */
-    void drawStringHCentered(int yPos, String str,
+    void drawStringHCentered(int16_t yPos, String str,
                              const char *fontData = ArialMT_Plain_16);
 
     /**
-     * @brief Function that fill a rectagle in x and y position width*height
+     * @brief Function that fills a rectagle in x and y position width*height
      * @param xPos   : X position
      * @param yPos   : Y position
      * @param width  : Width of the rectangle
      * @param height : Height of the rectangle
      */
-    void fillRectangle(int xPos, int yPos, int width, int height);
+    void fillRectangle(int16_t xPos, int16_t yPos, int16_t width,
+                       int16_t height);
 
     /**
-     * @brief Function that set color of the pixels (black or white)
+     * @brief Function that sets color of the pixels (black or white)
      * @param color : Color integer
      */
-    void setColor(int color);
+    void setColor(int16_t color);
 
     /**
-     * @brief Function that draw a width*height xBitmap in x and y position
+     * @brief Function that draws a width*height xBitmap in x and y position
      * @param xPos    : X position
      * @param yPos    : Y position
      * @param width   : Width of the bitmap
      * @param height  : Height of the bitmap
      * @param xBitmap : xBitmap to draw
      */
-    void drawXBitmap(int xPos, int yPos, int width, int height,
+    void drawXBitmap(int16_t xPos, int16_t yPos, int16_t width, int16_t height,
                      const char *xBitmap);
 
     /**
@@ -86,7 +87,7 @@ class Display {
     void paint();
 
     /**
-     * @brief Function that clear the display
+     * @brief Function that clears the display
      */
     void clear();
 

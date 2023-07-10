@@ -1,12 +1,12 @@
 #include "config.h"
 
 LoggerService Logger;
-// Preferences preferences;
 Device* device;
 EnvSensor envSensor;
 Gps gps;
-TimeData timeData;
+TimeDataHandler timeDataHandler;
 Display display;
+
 Button btnReset(RESET_BUTTON, TIME_LONGPRESS_RESET);
 Button btnUpdate(UPDATE_BUTTON);
 
@@ -36,14 +36,11 @@ void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     xMutex = xSemaphoreCreateMutex();
 
-    // Logger.log("• PREFERENCES");
-    // preferences.begin("device");
-
     Logger.log("• DEVICE");
     device = new Device();
 
     Logger.log("• TIMEDATA");
-    timeData = TimeData();
+    timeDataHandler = TimeDataHandler();
 
     Logger.log("• DATA HANDLER");
     DeviceDataHandler::begin();
@@ -72,7 +69,6 @@ void setup() {
                 // Reset device
                 device->init = false;
                 device->storeInitToPreferences();
-                // preferences.putBool("init", false);
                 DeviceDataHandler::reset();
 
                 device->endPreferences();
@@ -87,21 +83,15 @@ void setup() {
         // Check if already initialized
         device->retrieveInitFromPreferences();
         if (device->init == false) {
-            // if (preferences.getBool("init")) {
             Logger.log("• INIT DATA");
 
             // Setup device data
-            // preferences.putBool("init", true);
             device->init = true;
             device->storeInitToPreferences();
             device->setup();
             device->storeIdToPreferences();
             device->errorsHandler->file =
                 DeviceDataHandler::initEnvDataJsonArray();
-
-            // Save preferences
-            // preferences.putString("id", device->id);
-            // preferences.putBool("init", true);
 
             display.clear();
             display.drawStringHCentered(20, ".:: INIT DEVICE ::.",
@@ -115,9 +105,7 @@ void setup() {
         display.paint();
         Logger.log("• GPS");
         gps.begin();
-        device->errorsHandler->gps = gps.getGpsData(timeData, device->position);
-        /*preferences.putFloat("latitude", device->position->latitude);
-        preferences.putFloat("longitude", device->position->longitude);*/
+        device->errorsHandler->gps = gps.getGpsData(timeDataHandler, device->position);
 
         (device->errorsHandler->gps == GPS_OK)
             ? display.drawString(230, 100, "DONE", Cousine_Bold_18)
@@ -140,11 +128,10 @@ void setup() {
         device->storeErrorsToRTC(&errorsRTC);
         device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
-        Logger.log("• SAVEDDDD TO RTC");
-        esp_sleep_enable_timer_wakeup(timeData.getSleepTimeInSeconds() *
+        esp_sleep_enable_timer_wakeup(timeDataHandler.getSleepTimeInSeconds() *
                                       uS_TO_S_FACTOR);
         Logger.log("• SLEEP REMAINING: " +
-                   String(timeData.getSleepTimeInSeconds()));
+                   String(timeDataHandler.getSleepTimeInSeconds()));
 
         device->endPreferences();
 
@@ -153,23 +140,11 @@ void setup() {
     }
 
     // Get data from Preferences
-    /*device->id = preferences.getString("id");
-    device->position->latitude = preferences.getFloat("latitude");
-    device->position->longitude = preferences.getFloat("longitude");
-
-    preferences.end();*/
     device->retrieveIdFromPreferences();
     device->retrievePositionFromPreferences();
 
     device->retrieveErrorsFromRTC(&errorsRTC);
     device->retrieveEnvDataFromRTC(&lastEnvDataRTC);
-
-    /*preferences.begin("lastEnvData");
-    lastEnvData.temperature = preferences.getInt("temperature");
-    lastEnvData.humidity = preferences.getInt("humidity");
-    lastEnvData.pressure = preferences.getInt("pressure");
-    lastEnvData.airQuality = preferences.getInt("airQuality");
-    preferences.end();*/
 
     // Create update data task
     xTaskCreatePinnedToCore(
@@ -186,16 +161,13 @@ void setup() {
            updateByTimerStatus == STATUS_ALIVE) {
     }
 
-    // TODO: remove
-    device->log();
-
     device->storeErrorsToRTC(&errorsRTC);
     device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
-    esp_sleep_enable_timer_wakeup(timeData.getSleepTimeInSeconds() *
+    esp_sleep_enable_timer_wakeup(timeDataHandler.getSleepTimeInSeconds() *
                                   uS_TO_S_FACTOR);
     Logger.log("• SLEEP REMAINING: " +
-               String(timeData.getSleepTimeInSeconds()));
+               String(timeDataHandler.getSleepTimeInSeconds()));
 
     gps.modemPowerOff();
     device->endPreferences();
@@ -210,18 +182,17 @@ void updateByTimer(void* parameter) {
     updateByTimerStatus = STATUS_ALIVE;
     while (1) {
         if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER ||
-            timeData.getSleepTimeInSeconds() == 0) {
+            timeDataHandler.getSleepTimeInSeconds() == 0) {
             // get gps data every day to update time and date
-
             if (device->errorsHandler->gps != GPS_OK) {
                 device->errorsHandler->gps =
-                    gps.getGpsData(timeData, device->position);
+                    gps.getGpsData(timeDataHandler, device->position);
                 countGpsRead = 0;
             } else {
                 if (countGpsRead >= GET_GPS_DATA_COUNT) {
                     Logger.log("TASK_BY_TIMER: UPDATE TIME/DATE");
                     gps.begin();
-                    device->errorsHandler->gps = gps.getGpsData(timeData);
+                    device->errorsHandler->gps = gps.getGpsData(timeDataHandler);
                     countGpsRead = 0;
                 } else {
                     countGpsRead++;
@@ -236,7 +207,7 @@ void updateByTimer(void* parameter) {
             device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
             device->errorsHandler->file = DeviceDataHandler::writeLastEnvData(
-                EntryData(*device->lastEnvData, timeData.getTimestamp()),
+                EntryData(*device->lastEnvData, timeDataHandler.getTimestamp()),
                 device);
 
             display.clear();
@@ -280,7 +251,7 @@ void updateByButton(void* parameter) {
                 QrCodeHandler::generateStringForQr(device, *entrydataList);
             device->errorsHandler->qrCode =
                 QrCodeHandler::generateQrCode(qrText, qr);
-            QrCodeHandler::displayQrCode(qr, display);
+            QrCodeHandler::displayQrCode(qr, display, 5, 105);
             display.paint();
 
             vTaskDelay(pdMS_TO_TICKS(QR_CODE_DISPLAY_TIME));
@@ -314,11 +285,7 @@ void printEnvData() {
     display.drawXBitmap(0, 0, ENV_DATA_BG_WIDTH, ENV_DATA_BG_HEIGHT,
                         envDataBackground);
 
-    display.drawString(110, 0, timeData.getDate());
-
-    // TODO: remove this
-    // display.drawString(250, 10, String(timeData.getSleepTimeInSeconds()) +
-    // "s");
+    display.drawString(110, 0, timeDataHandler.getDate());
 
     display.drawString(
         12, 30,

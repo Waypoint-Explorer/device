@@ -5,7 +5,7 @@
 
 // Labels for JSON document
 #define ID_LABEL "id"
-#define ARRAY_DATA_LABEL "env_data"
+#define ARRAY_DATA_LABEL "entry_data"
 #define TEMPERATURE_LABEL "temperature"
 #define HUMIDITY_LABEL "humidity"
 #define PRESSURE_LABEL "pressure"

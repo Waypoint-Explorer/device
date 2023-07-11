@@ -32,6 +32,8 @@ void updateByTimer(void* parameter);
 void updateByButton(void* parameter);
 void printEnvData();
 void printQrBackground();
+void printDataAndQr();
+void storeAndSpleep();
 
 // Setup function
 void setup() {
@@ -45,6 +47,10 @@ void setup() {
     Logger.log("• DEVICE");
     device = new Device();
 
+    Logger.log("• RETRIEVE DATA FROM RTC");  // Get data from RTC
+    device->retrieveErrorsFromRTC(&errorsRTC);
+    device->retrieveEnvDataFromRTC(&lastEnvDataRTC);
+
     Logger.log("• TIMEDATA");
     timeDataHandler = TimeDataHandler();
 
@@ -57,15 +63,15 @@ void setup() {
     Logger.log("• DISPLAY");
     display = Display(DISPLAY_ROTATION);
 
+    float batteryLevel = 0;
+    device->errorsData->battery = Battery::getBatteryLevel(&batteryLevel);
+    Logger.log("• BATTERY : " + String((float)batteryLevel));
+
     esp_sleep_enable_ext0_wakeup(UPDATE_BUTTON, HIGH);
 
     calibrateSensorStatus = STATUS_DEAD;
     updateByTimerStatus = STATUS_DEAD;
     updateByButtonStatus = STATUS_DEAD;
-
-    // Get data from RTC
-    device->retrieveErrorsFromRTC(&errorsRTC);
-    device->retrieveEnvDataFromRTC(&lastEnvDataRTC);
 
     /////////////// INIT DEVICE IF FIRST TIME /////////////////////
     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED) {
@@ -86,28 +92,30 @@ void setup() {
             }
         }
 
-        display.clear();
-        display.drawStringHCentered(5, SETUP_STRING, Cousine_Bold_21);
-        display.paint();
-
         // Check if already initialized
         device->retrieveInitFromPreferences();
         if (device->init == false) {
             Logger.log("• INIT DATA");
 
             // Setup device data
-            device->init = true;
-            device->storeInitToPreferences();
+
             device->setup();
             device->storeIdToPreferences();
             device->errorsData->file =
-                DeviceDataHandler::initEnvDataJsonArray();
+                DeviceDataHandler::initEntryDataJsonArray();
 
             display.clear();
             display.drawStringHCentered(5, INIT_STRING, Cousine_Bold_21);
             display.drawStringHCentered(40, ID_STRING + device->id,
                                         Cousine_Bold_16);
-            display.paint();
+            // display.paint();
+            device->init = true;
+            device->storeInitToPreferences();
+
+        } else {
+            display.clear();
+            display.drawStringHCentered(5, SETUP_STRING, Cousine_Bold_21);
+            // display.paint();
         }
 
         display.drawString(20, 70, GET_GPS_STRING, Cousine_Bold_18);
@@ -134,42 +142,26 @@ void setup() {
             device->storePositionToPreferences();
             firstTimeGps = true;
         } else {
-            display.drawString(230, 70, ERROR_GPS_STRING, Cousine_Bold_18);
+            display.drawString(210, 70, ERROR_GPS_STRING, Cousine_Bold_18);
             firstTimeGps = false;
         }
 
         display.paint();
 
-        delay(INIT_DATA_DISPLAY_TIME);
+        if(device->errorsData->gps == GPS_OK) delay(INIT_DATA_DISPLAY_TIME);
 
         // Wait task to finish
         delay(100);
         while (calibrateSensorStatus == STATUS_ALIVE) {
+            delay(50);
         }
 
         display.drawStringHCentered(140, DONE_SETUP_STRING, Cousine_Bold_21);
         display.paint();
 
-        display.clear();
-        printEnvData();
-        printQrBackground();
-        display.paint();
+        printDataAndQr();
 
-        delay(100);
-
-        Logger.log("• SAVE TO RTC: " + device->errorsData->toString());
-        device->storeErrorsToRTC(&errorsRTC);
-        device->storeLastEnvDataToRTC(&lastEnvDataRTC);
-
-        esp_sleep_enable_timer_wakeup(timeDataHandler.getSleepTimeInSeconds() *
-                                      uS_TO_S_FACTOR);
-        Logger.log("• SLEEP REMAINING: " +
-                   String(timeDataHandler.getSleepTimeInSeconds()));
-
-        device->endPreferences();
-
-        Logger.log(".:: SLEEP Device ::.");
-        esp_deep_sleep_start();
+        storeAndSpleep();
     }
 
     // Get data from Preferences
@@ -179,7 +171,7 @@ void setup() {
     // Create update data task
     xTaskCreatePinnedToCore(
         updateByTimer, "updateByTimerTask", UPDATE_BY_TIMER_TASK_WORDS, NULL,
-        UPDATE_BY_TIMER_TASK_PRIORITY, &UpdateByTimerTask, CORE_0);
+        UPDATE_BY_TIMER_TASK_PRIORITY, &UpdateByTimerTask, CORE_1);
 
     xTaskCreatePinnedToCore(
         updateByButton, "updateByButtonTask", UPDATE_BY_BUTTON_TASK_WORDS, NULL,
@@ -189,22 +181,13 @@ void setup() {
     delay(100);
     while (updateByButtonStatus == STATUS_ALIVE ||
            updateByTimerStatus == STATUS_ALIVE) {
+        delay(50);
     }
-
-    // Store data to RTC
-    device->storeErrorsToRTC(&errorsRTC);
-    device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
     gps.modemPowerOff();
     device->endPreferences();
 
-    esp_sleep_enable_timer_wakeup(timeDataHandler.getSleepTimeInSeconds() *
-                                  uS_TO_S_FACTOR);
-    Logger.log("• SLEEP REMAINING: " +
-               String(timeDataHandler.getSleepTimeInSeconds()));
-
-    Logger.log(".:: SLEEP Device ::.");
-    esp_deep_sleep_start();
+    storeAndSpleep();
 }
 
 /* Function called by CalibrateSensorTask to calibrate sensor */
@@ -228,42 +211,47 @@ void updateByTimer(void* parameter) {
     while (1) {
         if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER ||
             timeDataHandler.getSleepTimeInSeconds() <= 0) {
+            // Create calibrate sensor task
+            xTaskCreatePinnedToCore(calibrateSensor, "calibrateSensorTask",
+                                    CALIBRATE_SENSOR_TASK_WORDS, NULL,
+                                    CALIBRATE_SENSOR_TASK_PRIORITY,
+                                    &CalibrateSensorTask, CORE_1);
+
             // get gps data every day to update time and date
-            if (device->errorsData->gps != GPS_OK) {
-                device->errorsData->gps =
-                    gps.getGpsData(timeDataHandler, device->position);
+            if (device->errorsData->gps != GPS_OK ||
+                countGpsRead >= GET_GPS_DATA_COUNT) {
+                Logger.log("TASK_BY_TIMER: UPDATE TIME/DATE (" +
+                           timeDataHandler.getTime() + ")");
+                gps.begin();
+                device->errorsData->gps = gps.getGpsData(timeDataHandler);
                 countGpsRead = 0;
             } else {
-                if (countGpsRead >= GET_GPS_DATA_COUNT) {
-                    Logger.log("TASK_BY_TIMER: UPDATE TIME/DATE");
-                    gps.begin();
-                    device->errorsData->gps = gps.getGpsData(timeDataHandler);
-                    countGpsRead = 0;
-                } else {
-                    countGpsRead++;
-                }
+                countGpsRead++;
             }
+
             if (device->errorsData->gps == GPS_OK) firstTimeGps = true;
 
-            Logger.log("TASK_BY_TIMER: UPDATE ENV DATA");
-            *device->lastEnvData = envSensor.getCalibratedEnvData(10);
+            // Wait task to finish
+            delay(100);
+            while (calibrateSensorStatus == STATUS_ALIVE) {
+                delay(50);
+            }
 
             xSemaphoreTake(xMutex, portMAX_DELAY);
 
             device->storeLastEnvDataToRTC(&lastEnvDataRTC);
 
             // At least first time gps must be ok to store data
-            if (firstTimeGps == true) {
-                device->errorsData->file = DeviceDataHandler::writeLastEnvData(
-                    EntryData(*device->lastEnvData,
-                              timeDataHandler.getTimestamp()),
-                    device);
+            if (firstTimeGps == true && device->errorsData->file == FILE_OK &&
+                device->errorsData->sensor == SENSOR_OK) {
+                device->errorsData->file =
+                    DeviceDataHandler::writeLastEntryData(
+                        EntryData(*device->lastEnvData,
+                                  timeDataHandler.getTimestamp()),
+                        device);
             }
 
-            display.clear();
-            printEnvData();
-            printQrBackground();
-            display.paint();
+            printDataAndQr();
 
             xSemaphoreGive(xMutex);
 
@@ -293,11 +281,7 @@ void updateByButton(void* parameter) {
             xSemaphoreTake(xMutex, portMAX_DELAY);
             LinkedList<EntryData>* entrydataList = new LinkedList<EntryData>;
             device->errorsData->file =
-                DeviceDataHandler::readEnvDataList(entrydataList);
-            float batteryLevel = 0;
-            device->errorsData->battery =
-                Battery::getBatteryLevel(&batteryLevel);
-            Logger.log("• BATTERY : " + String((float)batteryLevel));
+                DeviceDataHandler::readEntryDataList(entrydataList);
 
             display.clear();
             printEnvData();
@@ -311,10 +295,7 @@ void updateByButton(void* parameter) {
 
             delay(QR_CODE_DISPLAY_TIME);
 
-            display.clear();
-            printEnvData();
-            printQrBackground();
-            display.paint();
+            printDataAndQr();
 
             xSemaphoreGive(xMutex);
 
@@ -366,6 +347,33 @@ void printQrBackground() {
     display.drawStringHCentered(240, QR_CODE_STRING, Cousine_Bold_16);
     display.drawXBitmap((SCREEN_WIDTH - ARROW_DOWN_WIDTH) / 2, 300,
                         ARROW_DOWN_WIDTH, ARROW_DOWN_HEIGHT, arrowDown);
+}
+
+/* Print base interface when sleeping (environmental data and qr background)*/
+void printDataAndQr() {
+    display.clear();
+    printEnvData();
+    printQrBackground();
+    display.paint();
+}
+
+/* Store data to RTC and Sleep time */
+void storeAndSpleep() {
+    delay(100);
+
+    // Store data to RTC
+    Logger.log("• SAVE ERR TO RTC: " + device->errorsData->toString());
+    Logger.log("• SAVE DATA TO RTC: " + device->lastEnvData->toString());
+    device->storeErrorsToRTC(&errorsRTC);
+    device->storeLastEnvDataToRTC(&lastEnvDataRTC);
+
+    Logger.log("• SLEEP REMAINING: " +
+               String(timeDataHandler.getSleepTimeInSeconds()));
+    esp_sleep_enable_timer_wakeup(timeDataHandler.getSleepTimeInSeconds() *
+                                  uS_TO_S_FACTOR);
+
+    Logger.log(".:: SLEEP Device ::.");
+    esp_deep_sleep_start();
 }
 
 // Loop function never used

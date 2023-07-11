@@ -12,10 +12,12 @@
 #include "model/EntryData.h"
 
 #define MAX_STORED_ELEMENTS 240
+#define MAX_HOUR_DIFFERENCE 999
+#define S_TO_HOUR_FACTOR 3600
 #define JSON_DOC_SIZE 24576  // Calculated with ArduinoJson Assistant
 
-// File name of flash saved environmental data
-#define FILENAME "/env_data.json"
+// File name of flash saved entry data
+#define FILENAME "/entry_data.json"
 
 /* Device Data Handler class definition */
 class DeviceDataHandler {
@@ -34,22 +36,22 @@ class DeviceDataHandler {
      * @brief Function to initialize data of the device and store in file JSON
      * @return FileError in case of errors
      */
-    static FileError initEnvDataJsonArray();
+    static FileError initEntryDataJsonArray();
 
     /**
-     * @brief Function that updates environmental data list with last reading
+     * @brief Function that updates entry data list with last reading
      * @param entryData : EntryData object containing the last reading
      * @param device  : Device object
      * @return FileError in case of errors
      */
-    static FileError writeLastEnvData(EntryData entryData, Device* device);
+    static FileError writeLastEntryData(EntryData entryData, Device* device);
 
     /**
      * @brief Function that read entry data list
      * @param LinkedList<EntryData> : List of entry data (EnvData e Timestamp)
      * @return FileError in case of errors
      */
-    static FileError readEnvDataList(LinkedList<EntryData>* entryDataList);
+    static FileError readEntryDataList(LinkedList<EntryData>* entryDataList);
 };
 
 #endif

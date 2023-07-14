@@ -7,7 +7,7 @@
 #include "Wire.h"
 #include "devices/Battery.h"
 #include "devices/Display.h"
-#include "devices/EnvSensor.h"
+#include "devices/EnvironmentalSensor.h"
 #include "devices/Gps.h"
 #include "fonts.h"
 #include "images.h"

@@ -1,4 +1,4 @@
-#include "EnvSensor.h"
+#include "EnvironmentalSensor.h"
 
 // Sensor configuration
 const uint8_t bsecConfigIaq[] = {
@@ -10,7 +10,7 @@ bsec_virtual_sensor_t sensorList[] = {
     BSEC_OUTPUT_RAW_TEMPERATURE, BSEC_OUTPUT_RAW_PRESSURE,
     BSEC_OUTPUT_RAW_HUMIDITY, BSEC_OUTPUT_IAQ, BSEC_OUTPUT_RAW_GAS};
 
-SensorError EnvSensor::begin() {
+SensorError EnvironmentalSensor::begin() {
     // Sensor begin and check error
     sensor.begin(BME68X_I2C_ADDR_HIGH, Wire);
     if (!checkSensor()) {
@@ -50,23 +50,27 @@ SensorError EnvSensor::begin() {
     return SENSOR_OK;
 }
 
-EnvironmentalData EnvSensor::getEnvData() {
+EnvironmentalData EnvironmentalSensor::getEnvData() {
     EnvironmentalData envData = EnvironmentalData();
     if (sensor.run()) {
-        envData.temperature = sensor.rawTemperature;
-        envData.humidity = sensor.rawHumidity - HUMIDITY_CORRECTION;
+        int8_t temp = sensor.rawTemperature;
+        int8_t hum = sensor.rawHumidity - HUMIDITY_CORRECTION;
+        int8_t aQ = getAirQulity(sensor.rawHumidity - HUMIDITY_CORRECTION,
+                                 sensor.gasResistance);
+        envData.temperature =
+            (temp > MAX_MEASURE_VALUE) ? MAX_MEASURE_VALUE : temp;
+        envData.humidity = (hum > MAX_MEASURE_VALUE) ? MAX_MEASURE_VALUE : hum;
         envData.pressure = formatPressure(sensor.pressure);
-        envData.airQuality = getAirQulity(
-            sensor.rawHumidity - HUMIDITY_CORRECTION, sensor.gasResistance);
+        envData.airQuality = (aQ > MAX_MEASURE_VALUE) ? MAX_MEASURE_VALUE : aQ;
         envData.gasResistance = sensor.gasResistance;
 
         // Debug
-        // envData.log();
+        envData.log();
     }
     return envData;
 }
 
-bool EnvSensor::checkSensor() {
+bool EnvironmentalSensor::checkSensor() {
     if (sensor.bsecStatus < BSEC_OK) {
         Logger.log("BSEC error, status: " + sensor.bsecStatus);
         return false;
@@ -85,7 +89,7 @@ bool EnvSensor::checkSensor() {
     return true;
 }
 
-float EnvSensor::getHumidityScore(float humidity) {
+float EnvironmentalSensor::getHumidityScore(float humidity) {
     float humidityScore;
     float currentHumidity = humidity;
     if (currentHumidity >= 38 && currentHumidity <= 42)
@@ -103,7 +107,7 @@ float EnvSensor::getHumidityScore(float humidity) {
     return humidityScore;
 }
 
-float EnvSensor::getGasScore(float gasResistance) {
+float EnvironmentalSensor::getGasScore(float gasResistance) {
     float gasScore;
     float gasReference = gasResistance;
     if (gasReference > GAS_UPPER_LIMIT) gasReference = GAS_UPPER_LIMIT;
@@ -117,15 +121,17 @@ float EnvSensor::getGasScore(float gasResistance) {
     return gasScore;
 }
 
-int16_t EnvSensor::getAirQulity(float humidity, float gasResistance) {
+int16_t EnvironmentalSensor::getAirQulity(float humidity, float gasResistance) {
     float airQualityScore =
         getHumidityScore(humidity) + getGasScore(gasResistance);
     return airQualityScore * 100;
 }
 
-int16_t EnvSensor::formatPressure(float pressure) { return (int)pressure / 10; }
+int16_t EnvironmentalSensor::formatPressure(float pressure) {
+    return (int)pressure / 10;
+}
 
-EnvironmentalData EnvSensor::getCalibratedEnvData(int16_t cycles) {
+EnvironmentalData EnvironmentalSensor::getCalibratedEnvData(int16_t cycles) {
     Logger.log("START CALIBRATION!");
     int16_t count = 0;
     while (count < cycles) {

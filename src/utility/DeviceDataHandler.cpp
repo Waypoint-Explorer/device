@@ -8,7 +8,7 @@ FileError DeviceDataHandler::initEntryDataJsonArray() {
     File file = SPIFFS.open(FILENAME, FILE_WRITE);
     DynamicJsonDocument doc(JSON_DOC_SIZE);
 
-    JsonArray entry_data = doc.createNestedArray(ARRAY_DATA_LABEL);
+    JsonArray entryData = doc.createNestedArray(ARRAY_DATA_LABEL);
 
     if (serializeJsonPretty(doc, file) == 0) {
         Logger.log("Failed to write to SPIFFS file");
@@ -33,13 +33,42 @@ FileError DeviceDataHandler::writeLastEntryData(EntryData entryData,
         JsonArray array = doc[ARRAY_DATA_LABEL];
 
         int64_t diff = 0;
+        int64_t diffHours = 0;
+        int64_t diffPrec = 0;
+        int64_t diffHoursPrec = -1;
 
-        if (array.size() > 0) {
-            JsonObject object = array[0].as<JsonObject>();
-            diff = entryData.timestamp - object[TIMESTAMP_LABEL].as<int64_t>();
+        if (array.size() > 0) {  // atleast 1 element
+            // check if new entry hour diff with first entry is between 0 and
+            // 999
+            JsonObject firstobject = array[0].as<JsonObject>();
+
+            diff = entryData.timestamp -
+                   firstobject[TIMESTAMP_LABEL].as<int64_t>();
+
+            if (diff <= 0)
+                diffHours = -1;
+            else
+                diffHours = round((double)diff / S_TO_HOUR_FACTOR);
+
+            if (array.size() > 1) {  // atleast 2 elements
+                // check if new entry hour diff with last entry is different
+                JsonObject objectPrec =
+                    array[array.size() - 1].as<JsonObject>();  // last element
+                diffPrec = objectPrec[TIMESTAMP_LABEL].as<int64_t>() -
+                           firstobject[TIMESTAMP_LABEL].as<int64_t>();
+                if (diffPrec <= 0)
+                    diffHoursPrec = -1;
+                else
+                    diffHoursPrec = round((double)diffPrec / S_TO_HOUR_FACTOR);
+            }
         }
-        
-        if (diff >= 0 && (diff / S_TO_HOUR_FACTOR) < MAX_HOUR_DIFFERENCE) {
+
+        Logger.log("DIFF HOURS: " + String(diffHours));
+        Logger.log("DIFF HOURS PREC: " + String(diffHoursPrec));
+
+        if (diffHours >= 0 && diffHours < MAX_HOUR_DIFFERENCE &&
+            diffHours > diffHoursPrec) {
+            Logger.log("Add element");
             // Remove older element
             if (array.size() >= MAX_STORED_ELEMENTS) {
                 array.remove(0);
@@ -52,13 +81,17 @@ FileError DeviceDataHandler::writeLastEntryData(EntryData entryData,
             elem[PRESSURE_LABEL] = entryData.envData.pressure;
             elem[AIR_QUALITY_LABEL] = entryData.envData.airQuality;
 
-            if (serializeJsonPretty(doc, file) == 0) {
-                Logger.log("Failed to write to SPIFFS file");
-                return FILE_CANT_WRITE;
-            } else {
-                Logger.log("File update success!");
-            }
+        } else {
+            Logger.log("Entry data not added!");
         }
+
+        if (serializeJsonPretty(doc, file) == 0) {
+            Logger.log("Failed to write to SPIFFS file");
+            return FILE_CANT_WRITE;
+        } else {
+            Logger.log("File update success!");
+        }
+
         file.close();
 
     } else {

@@ -1,11 +1,13 @@
-#ifndef __ENV_SENSOR__
-#define __ENV_SENSOR__
+#ifndef __ENVIRONMENTAL_SENSOR__
+#define __ENVIRONMENTAL_SENSOR__
 
 #include "Arduino.h"
 #include "bsec.h"
 #include "errors.h"
 #include "model/EnvironmentalData.h"
 #include "utility/Logger.h"
+
+#define MAX_MEASURE_VALUE 99
 
 #define HUMIDITY_WEIGHT 0.25
 #define HUMIDITY_REFERENCE 40
@@ -18,7 +20,7 @@
 #define CALIBRATION_DELAY_MILLIS 3000
 
 /* Environmental Sensor class definition */
-class EnvSensor {
+class EnvironmentalSensor {
    public:
     /* Bosch sensor */
     Bsec sensor;
@@ -30,13 +32,14 @@ class EnvSensor {
 
     /**
      * @brief Get environmental data from sensor
-     * @return environmental data object
+     * @return environmental data
      */
     EnvironmentalData getEnvData();
 
     /**
      * @brief Function to get calibrated data from sensor
      * @param cycles : Cycles of calibration
+     * return environmental data
      */
     EnvironmentalData getCalibratedEnvData(int16_t cycles);
 

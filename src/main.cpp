@@ -2,7 +2,7 @@
 
 LoggerService Logger;
 Device* device;
-EnvSensor envSensor;
+EnvironmentalSensor envSensor;
 Gps gps;
 TimeDataHandler timeDataHandler;
 Display display;
@@ -21,8 +21,8 @@ static volatile uint8_t updateByButtonStatus = STATUS_DEAD;
 
 SemaphoreHandle_t xMutex;
 
-RTC_DATA_ATTR uint8_t countGpsRead = 0;
-RTC_DATA_ATTR bool firstTimeGps = false;
+RTC_DATA_ATTR uint8_t countGpsRead;
+RTC_DATA_ATTR bool firstTimeGps;
 
 RTC_DATA_ATTR struct EnvDataStruct lastEnvDataRTC;
 RTC_DATA_ATTR struct ErrorsStruct errorsRTC;
@@ -37,7 +37,7 @@ void storeAndSpleep();
 
 // Setup function
 void setup() {
-    Logger.begin(true);
+    Logger.begin(false);  // true for debug
     Logger.log(".:: WAKE UP Device ::.");
 
     pinMode(LED_BUILTIN, OUTPUT);
@@ -80,7 +80,7 @@ void setup() {
             if (btnReset.checkPress() == LONG_PRESS) {
                 Logger.log("• DEVICE RESET");
                 display.clear();
-                display.drawStringHCentered(5, RESET_STRING, Cousine_Bold_21);
+                display.drawStringHCentered(200, RESET_STRING, Cousine_Bold_21);
                 display.paint();
                 // Reset device
                 device->init = false;
@@ -118,6 +118,9 @@ void setup() {
             // display.paint();
         }
 
+        countGpsRead = 0;
+        firstTimeGps = false;
+
         display.drawString(20, 70, GET_GPS_STRING, Cousine_Bold_18);
         display.paint();
 
@@ -148,7 +151,7 @@ void setup() {
 
         display.paint();
 
-        if(device->errorsData->gps == GPS_OK) delay(INIT_DATA_DISPLAY_TIME);
+        if (device->errorsData->gps == GPS_OK) delay(INIT_DATA_DISPLAY_TIME);
 
         // Wait task to finish
         delay(100);

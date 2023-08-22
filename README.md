@@ -1,12 +1,12 @@
-# smart-waypoint
-Repo for the smart waypoint devices
+# device
+Repo for the marker device
 
 ## License
 ```
 Copyright (C) 2022-2023 Waypoint Explorer Organization - All Rights Reserved.
 
 THE CONTENTS OF THIS REPOSITORY ARE PROPRIETARY.
-UNAUTHORIZED COPYING, TRANSFERRING OR REPRODUCTION OF THE CONTENTS OF THIS REPOSITORY IN WHOLE OR PART, 
+UNAUTHORIZED COPYING, TRANSFERRING OR REPRODUCTION OF THE CONTENTS OF THIS REPOSITORY IN WHOLE OR PART,
 VIA ANY MEANS WITHOUT EXPRESS PRIOR AGREEMENT IS STRICTLY PROHIBITED UNLESS SPECIFICALLY NOTED ON THIS FILE.
 
 The receipt or possession of the source code and/or any parts thereof does not convey or imply any right to use them
@@ -17,8 +17,6 @@ the warranties of merchantability, fitness for a particular purpose and non infr
 In no event shall the authors or copyright holders be liable for any claim, damages or other liability,
 whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software
 or the use or other dealings in the software.
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 Some documents contained in this repository may be the copyrighted properties of others; acknowledgment of those copyrights is hereby given. All such material is used with the permission of the owner.
 ```
